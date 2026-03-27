@@ -10,726 +10,236 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --bg: #0a0a0a;
-  --bg-elevated: #111111;
-  --bg-card: #161616;
-  --text-primary: #e8e4df;
-  --text-secondary: #7a756f;
-  --text-muted: #4a4641;
-  --accent: #c8a97e;
-  --accent-glow: rgba(200, 169, 126, 0.4);
-  --accent-dim: rgba(200, 169, 126, 0.15);
-  --border: rgba(255, 255, 255, 0.06);
-  --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'DM Sans', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08080a;
+  --text:#e8e4df;
+  --text2:#7a756f;
+  --muted:#3a3632;
+  --accent:#c8a97e;
+  --accentDim:rgba(200,169,126,0.12);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
 }
+html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--bg)}
 
-html {
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--text-muted) var(--bg);
-}
+/* === LOADER === */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+#loader .spinner{width:44px;height:44px;border:1px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loader .name{font-family:var(--serif);font-size:18px;letter-spacing:6px;text-transform:uppercase;color:var(--text2)}
+#loader .sub{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
 
-body {
-  background: var(--bg);
-  color: var(--text-primary);
-  font-family: var(--sans);
-  font-weight: 300;
-  line-height: 1.7;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+/* === 3D CANVAS === */
+#scene-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
 
-::selection {
-  background: var(--accent);
-  color: var(--bg);
-}
+/* === OVERLAY UI === */
+.overlay{position:relative;z-index:2;pointer-events:none}
+.overlay a,.overlay button{pointer-events:auto}
 
-/* ===== CUSTOM CURSOR ===== */
-.cursor-dot {
-  position: fixed;
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 10000;
-  transition: transform 0.1s;
-  mix-blend-mode: difference;
+/* === NAV === */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 40px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto;transition:background .4s}
+nav.scrolled{background:rgba(8,8,10,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--serif);font-size:18px;font-weight:300;letter-spacing:7px;text-transform:uppercase;color:var(--text);text-decoration:none}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text);text-decoration:none;opacity:.45;transition:opacity .3s}
+.nav-links a:hover{opacity:1}
+
+/* === STAGE LABELS (appear during 3D journey) === */
+.stage-label{
+  position:fixed;z-index:10;
+  opacity:0;
+  transition:opacity .6s;
+  pointer-events:none;
 }
-.cursor-ring {
-  position: fixed;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 10000;
-  transition: transform 0.15s ease-out, width 0.3s, height 0.3s, border-color 0.3s;
-  mix-blend-mode: difference;
+.stage-label.active{opacity:1}
+
+.stage-label .num{
+  font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--accent);
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+}
+.stage-label .num::before{content:'';width:32px;height:1px;background:var(--accent)}
+.stage-label h2{
+  font-family:var(--serif);font-size:clamp(32px,5vw,60px);font-weight:300;line-height:1.1;margin-bottom:16px;
+}
+.stage-label h2 em{font-style:italic;color:var(--accent)}
+.stage-label p{
+  font-size:14px;color:var(--text2);line-height:1.8;max-width:380px;
 }
 
-/* ===== LOADER ===== */
-.loader {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 24px;
-}
-.loader-arch {
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--accent);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loader-text {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
+/* Stage positions */
+#stage-0{left:40px;top:50%;transform:translateY(-50%)}
+#stage-1{left:40px;top:50%;transform:translateY(-50%)}
+#stage-2{right:40px;top:50%;transform:translateY(-50%);text-align:right}
+#stage-2 .num{justify-content:flex-end}
+#stage-2 .num::before{order:2}
+#stage-2 p{margin-left:auto}
+#stage-3{left:40px;top:50%;transform:translateY(-50%)}
+#stage-4{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
+#stage-4 .num{justify-content:center}
+#stage-4 p{margin:0 auto}
 
-/* ===== 3D CANVAS (FULL-PAGE BACKGROUND) ===== */
-#bg-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
+/* === SCROLL SPACER === */
+.scroll-spacer{height:600vh;position:relative;z-index:0}
 
-/* ===== NAVIGATION ===== */
-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 28px 48px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background 0.4s, backdrop-filter 0.4s;
-}
-nav.scrolled {
-  background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-.nav-logo {
-  font-family: var(--serif);
-  font-size: 20px;
-  font-weight: 300;
-  letter-spacing: 8px;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  text-decoration: none;
-}
-.nav-logo span { color: var(--accent); }
-.nav-links {
-  display: flex;
-  gap: 36px;
-  list-style: none;
-}
-.nav-links a {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 300;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  text-decoration: none;
-  opacity: 0.5;
-  transition: opacity 0.4s ease;
-  position: relative;
-}
-.nav-links a:hover { opacity: 1; }
-.nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: var(--accent);
-  transition: width 0.4s ease;
-}
-.nav-links a:hover::after { width: 100%; }
+/* === CONTENT SECTIONS (after 3D journey) === */
+.content-sections{position:relative;z-index:3;background:var(--bg)}
 
-/* Mobile menu */
-.nav-burger {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  cursor: pointer;
-  padding: 8px;
-}
-.nav-burger span {
-  width: 24px;
-  height: 1px;
-  background: var(--text-primary);
-  transition: all 0.3s;
-}
+section{padding:120px 40px;max-width:1100px;margin:0 auto}
+.s-num{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:10px}
+.s-div{width:50px;height:1px;background:var(--accent);margin-bottom:40px}
+.s-title{font-family:var(--serif);font-size:clamp(32px,4.5vw,56px);font-weight:300;margin-bottom:48px;line-height:1.15}
+.s-title em{font-style:italic;color:var(--accent)}
 
-/* ===== CONTENT WRAPPER ===== */
-.content {
-  position: relative;
-  z-index: 1;
-}
+/* About */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px}
+.about-text p{font-size:15px;color:var(--text2);line-height:1.9;margin-bottom:20px}
+.about-quote{font-family:var(--serif);font-size:22px;color:var(--text);line-height:1.6;padding-left:20px;border-left:2px solid var(--accent);margin:32px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.stat{border-left:1px solid rgba(255,255,255,.06);padding-left:20px}
+.stat-n{font-family:var(--serif);font-size:48px;font-weight:300;color:var(--accent);line-height:1}
+.stat-n span{font-size:24px;opacity:.5}
+.stat-l{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:6px}
 
-/* ===== HERO ===== */
-.hero {
-  position: relative;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
+/* Projects */
+.project-row{
+  display:grid;grid-template-columns:60px 1fr 160px 50px;align-items:center;
+  padding:36px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .35s;
 }
-.hero-content {
-  position: relative;
-  z-index: 1;
-  padding: 0 48px;
-  max-width: 850px;
-}
-.hero-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 28px;
-  opacity: 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.hero-label::before {
-  content: '';
-  width: 40px;
-  height: 1px;
-  background: var(--accent);
-}
-.hero-title {
-  font-family: var(--serif);
-  font-size: clamp(44px, 7.5vw, 92px);
-  font-weight: 300;
-  line-height: 1.08;
-  margin-bottom: 32px;
-  opacity: 0;
-}
-.hero-title em {
-  font-style: italic;
-  color: var(--accent);
-}
-.hero-subtitle {
-  font-size: 16px;
-  color: var(--text-secondary);
-  max-width: 460px;
-  line-height: 1.85;
-  opacity: 0;
-}
-.hero-scroll-indicator {
-  position: absolute;
-  bottom: 48px;
-  left: 48px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  z-index: 1;
-}
-.scroll-line {
-  width: 48px;
-  height: 1px;
-  background: var(--text-muted);
-  position: relative;
-  overflow: hidden;
-}
-.scroll-line::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: var(--accent);
-  animation: scrollSlide 2s ease-in-out infinite;
-}
-@keyframes scrollSlide {
-  0% { left: -100%; }
-  50% { left: 0; }
-  100% { left: 100%; }
-}
-.scroll-text {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
+.project-row:first-child{border-top:1px solid rgba(255,255,255,.05)}
+.project-row:hover{padding-left:20px;background:linear-gradient(90deg,var(--accentDim),transparent 60%)}
+.project-row .num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.project-row .name{font-family:var(--serif);font-size:clamp(20px,2.8vw,30px);font-weight:300;transition:color .3s}
+.project-row:hover .name{color:var(--accent)}
+.project-row .type{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:right}
+.project-row .arrow{font-size:18px;color:var(--muted);text-align:right;transition:all .3s}
+.project-row:hover .arrow{color:var(--accent);transform:translateX(4px)}
 
-/* Right side 3D area label */
-.hero-3d-label {
-  position: absolute;
-  right: 48px;
-  bottom: 48px;
-  z-index: 1;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  writing-mode: vertical-rl;
-  opacity: 0;
-}
+.project-expand{max-height:0;overflow:hidden;transition:max-height .55s cubic-bezier(.4,0,.2,1)}
+.project-expand.open{max-height:500px}
+.project-expand-inner{padding:32px 0 32px 60px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px}
+.proj-img{aspect-ratio:16/10;background:var(--bg);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.proj-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,var(--accentDim))}
+.proj-img .ico{font-size:28px;color:var(--muted);position:relative;z-index:1}
+.proj-img .txt{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
+.proj-info h4{font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:14px}
+.proj-info p{font-size:13px;color:var(--text2);line-height:1.85;margin-bottom:20px}
+.proj-tags{display:flex;flex-wrap:wrap;gap:6px}
+.proj-tag{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(255,255,255,.06);color:var(--text2)}
 
-/* ===== SECTION COMMON ===== */
-section {
-  padding: 140px 48px;
-  position: relative;
-}
-.section-number {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-.section-title {
-  font-family: var(--serif);
-  font-size: clamp(36px, 5vw, 64px);
-  font-weight: 300;
-  margin-bottom: 60px;
-  line-height: 1.15;
-}
-.section-title em {
-  font-style: italic;
-  color: var(--accent);
-}
-.section-divider {
-  width: 60px;
-  height: 1px;
-  background: var(--accent);
-  margin-bottom: 48px;
-}
+/* Skills */
+.skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.skill-box{background:rgba(255,255,255,.02);padding:40px 28px;border:1px solid rgba(255,255,255,.04);transition:all .4s;position:relative;overflow:hidden}
+.skill-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.skill-box:hover::before{transform:scaleX(1)}
+.skill-box:hover{background:rgba(255,255,255,.03);border-color:rgba(200,169,126,.12)}
+.skill-box .icon{font-size:24px;color:var(--accent);margin-bottom:16px}
+.skill-box h3{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:24px}
+.skill-box ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+.skill-box li{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+.skill-box li .n{font-size:13px;color:var(--text2)}
+.sk-bar{width:72px;height:2px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.sk-fill{height:100%;background:var(--accent);border-radius:1px}
 
-/* ===== ABOUT ===== */
-.about-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 80px;
-  align-items: start;
-}
-.about-text p {
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-  line-height: 1.9;
-}
-.about-highlight {
-  font-family: var(--serif);
-  font-size: 24px;
-  font-weight: 300;
-  color: var(--text-primary);
-  line-height: 1.6;
-  padding-left: 24px;
-  border-left: 2px solid var(--accent);
-  margin: 36px 0;
-}
-.about-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  padding-top: 20px;
-}
-.stat {
-  border-left: 1px solid var(--border);
-  padding-left: 24px;
-}
-.stat-number {
-  font-family: var(--serif);
-  font-size: 52px;
-  font-weight: 300;
-  color: var(--accent);
-  line-height: 1;
-  margin-bottom: 8px;
-}
-.stat-suffix {
-  font-size: 24px;
-  color: var(--accent);
-  opacity: 0.6;
-}
-.stat-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
+/* Contact */
+.contact{text-align:center;padding:160px 40px}
+.contact .s-div{margin:0 auto 40px}
+.contact-email{font-family:var(--serif);font-size:clamp(20px,3vw,34px);font-weight:300;color:var(--accent);text-decoration:none;position:relative;display:inline-block}
+.contact-email::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;background:var(--accent);transform:scaleX(0);transition:transform .4s}
+.contact-email:hover::after{transform:scaleX(1)}
+.contact-links{margin-top:48px;display:flex;justify-content:center;gap:40px}
+.contact-links a{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
+.contact-links a:hover{color:var(--accent)}
 
-/* ===== PROJECTS ===== */
-.projects-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.project-card {
-  display: grid;
-  grid-template-columns: 60px 1fr 180px 60px;
-  align-items: center;
-  padding: 40px 0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: all 0.4s ease;
-  position: relative;
-}
-.project-card:first-child {
-  border-top: 1px solid var(--border);
-}
-.project-card:hover {
-  padding-left: 24px;
-  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 60%);
-}
-.project-num {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-}
-.project-name {
-  font-family: var(--serif);
-  font-size: clamp(22px, 3vw, 32px);
-  font-weight: 300;
-  transition: color 0.3s;
-}
-.project-card:hover .project-name { color: var(--accent); }
-.project-type {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-align: right;
-}
-.project-arrow {
-  font-size: 20px;
-  color: var(--text-muted);
-  transition: all 0.3s;
-  text-align: right;
-}
-.project-card:hover .project-arrow {
-  color: var(--accent);
-  transform: translateX(4px);
-}
+/* Footer */
+footer{padding:28px 40px;border-top:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
 
-/* Project Expanded */
-.project-detail {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.project-detail.active {
-  max-height: 600px;
-}
-.project-detail-inner {
-  padding: 40px 0 40px 60px;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 48px;
-}
-.project-image-placeholder {
-  aspect-ratio: 16/10;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 14px;
-  position: relative;
-  overflow: hidden;
-}
-.project-image-placeholder::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 30%, var(--accent-dim) 100%);
-}
-.placeholder-icon {
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--text-muted);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: var(--text-muted);
-  position: relative;
-}
-.placeholder-text {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  position: relative;
-}
-.project-info h4 {
-  font-family: var(--serif);
-  font-size: 24px;
-  font-weight: 400;
-  margin-bottom: 16px;
-}
-.project-info p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.85;
-  margin-bottom: 24px;
-}
-.project-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.project-tag {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  transition: all 0.3s;
-}
-.project-tag:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+/* Progress bar */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);z-index:999;width:0;transition:none}
 
-/* ===== SKILLS ===== */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-}
-.skill-group {
-  background: var(--bg-elevated);
-  padding: 48px 36px;
-  border: 1px solid var(--border);
-  transition: all 0.4s ease;
-  position: relative;
-  overflow: hidden;
-}
-.skill-group::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.5s ease;
-}
-.skill-group:hover::before {
-  transform: scaleX(1);
-}
-.skill-group:hover {
-  background: var(--bg-card);
-  border-color: rgba(200, 169, 126, 0.15);
-}
-.skill-group-icon {
-  font-size: 28px;
-  margin-bottom: 20px;
-  color: var(--accent);
-}
-.skill-group-title {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 400;
-  margin-bottom: 28px;
-}
-.skill-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.skill-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-}
-.skill-name {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-.skill-bar-wrapper {
-  width: 80px;
-  height: 3px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.skill-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 1s ease;
-}
+/* Scroll hint */
+.scroll-hint{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transition:opacity .5s}
+.scroll-hint.show{opacity:1}
+.scroll-hint .line{width:1px;height:32px;background:linear-gradient(to bottom,transparent,var(--accent));animation:scrollPulse 1.5s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+.scroll-hint span{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
 
-/* ===== CONTACT ===== */
-.contact-section {
-  text-align: center;
-  padding: 180px 48px;
-  position: relative;
-}
-.contact-section .section-title {
-  max-width: 700px;
-  margin: 0 auto 40px;
-}
-.contact-section .section-divider {
-  margin: 0 auto 48px;
-}
-.contact-email {
-  font-family: var(--serif);
-  font-size: clamp(22px, 3vw, 36px);
-  font-weight: 300;
-  color: var(--accent);
-  text-decoration: none;
-  display: inline-block;
-  padding-bottom: 4px;
-  position: relative;
-  transition: all 0.3s;
-}
-.contact-email::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.4s ease;
-}
-.contact-email:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-.contact-links {
-  margin-top: 56px;
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-}
-.contact-link {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.3s;
-}
-.contact-link:hover { color: var(--accent); }
+/* Grain */
+.grain{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
 
-/* ===== FOOTER ===== */
-footer {
-  padding: 36px 48px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.footer-left {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.footer-right {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-/* ===== GRAIN OVERLAY ===== */
-.grain {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 200px;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-  nav { padding: 20px 24px; }
-  .nav-links { display: none; }
-  .nav-burger { display: flex; }
-  section { padding: 80px 24px; }
-  .hero-content { padding: 0 24px; }
-  .hero-scroll-indicator { left: 24px; }
-  .hero-3d-label { display: none; }
-  .about-grid { grid-template-columns: 1fr; gap: 48px; }
-  .skills-grid { grid-template-columns: 1fr; }
-  .project-card { grid-template-columns: 40px 1fr 60px; }
-  .project-type { display: none; }
-  .project-detail-inner { grid-template-columns: 1fr; padding-left: 0; }
-  .contact-links { flex-direction: column; gap: 24px; }
-  footer { padding: 24px; flex-direction: column; gap: 12px; }
-  .cursor-dot, .cursor-ring { display: none; }
-}
-
-@media (max-width: 500px) {
-  .about-stats { grid-template-columns: 1fr; gap: 28px; }
+/* Responsive */
+@media(max-width:900px){
+  nav{padding:18px 20px}
+  .nav-links{display:none}
+  section{padding:80px 20px}
+  .about-grid{grid-template-columns:1fr;gap:40px}
+  .skills-grid{grid-template-columns:1fr}
+  .project-row{grid-template-columns:40px 1fr 50px}
+  .project-row .type{display:none}
+  .project-expand-inner{grid-template-columns:1fr;padding-left:0}
+  .stage-label{left:20px!important;right:20px!important;transform:translateY(-50%)!important;text-align:left!important}
+  .stage-label .num{justify-content:flex-start!important}
+  .stage-label p{margin:0!important}
+  .contact-links{flex-direction:column;gap:20px}
+  footer{flex-direction:column;gap:8px;padding:20px}
 }
 </style>
 </head>
 <body>
 
-<!-- Grain Overlay -->
 <div class="grain"></div>
-
-<!-- Custom Cursor -->
-<div class="cursor-dot" id="cursor-dot"></div>
-<div class="cursor-ring" id="cursor-ring"></div>
+<div id="progress"></div>
 
 <!-- Loader -->
-<div class="loader" id="loader">
-  <div class="loader-arch"></div>
-  <div class="loader-text">Artem Dobrovolsky</div>
+<div id="loader">
+  <div class="spinner"></div>
+  <div class="name">Artem Dobrovolsky</div>
+  <div class="sub">Loading experience</div>
 </div>
 
-<!-- 3D Background Canvas -->
-<canvas id="bg-canvas"></canvas>
+<!-- 3D Canvas -->
+<canvas id="scene-canvas"></canvas>
 
-<!-- Content -->
-<div class="content">
+<!-- Scroll Hint -->
+<div class="scroll-hint" id="scrollHint">
+  <div class="line"></div>
+  <span>Scroll</span>
+</div>
+
+<!-- Stage Labels -->
+<div class="stage-label" id="stage-0">
+  <div class="num">00 — Начало</div>
+  <h2>Artem<br>Dobrovolsky<br><em>Architect</em></h2>
+  <p>Добро пожаловать в моё портфолио. Прокручивайте вниз — мы пройдём путь создания архитектурного проекта.</p>
+</div>
+
+<div class="stage-label" id="stage-1">
+  <div class="num">01 — Фундамент</div>
+  <h2>Всё начинается<br>с <em>основания</em></h2>
+  <p>Каждый проект начинается с анализа участка, геологии и функциональных задач. Фундамент — это обещание будущей формы.</p>
+</div>
+
+<div class="stage-label" id="stage-2">
+  <div class="num">02 — Эскиз</div>
+  <h2>Линии<br><em>замысла</em></h2>
+  <p>Первые наброски — диалог между идеей и пространством. Силуэт здания рождается из контекста и интуиции.</p>
+</div>
+
+<div class="stage-label" id="stage-3">
+  <div class="num">03 — Объём</div>
+  <h2>Форма обретает<br><em>глубину</em></h2>
+  <p>Плоский эскиз превращается в трёхмерную модель. Появляются пропорции, свет, масштаб.</p>
+</div>
+
+<div class="stage-label" id="stage-4">
+  <div class="num">04 — Материал</div>
+  <h2>Архитектура<br><em>оживает</em></h2>
+  <p>Текстуры, материалы и свет превращают модель в пространство, которое можно почувствовать.</p>
+</div>
 
 <!-- Navigation -->
 <nav id="navbar">
@@ -740,533 +250,620 @@ footer {
     <li><a href="#skills">Навыки</a></li>
     <li><a href="#contact">Контакты</a></li>
   </ul>
-  <div class="nav-burger" onclick="this.classList.toggle('active')">
-    <span></span><span></span><span></span>
-  </div>
 </nav>
 
-<!-- Hero Section -->
-<section class="hero" id="hero">
-  <div class="hero-content">
-    <div class="hero-label">Архитектор — Портфолио 2026</div>
-    <h1 class="hero-title">Artem<br>Dobrovolsky<br><em>Architect</em></h1>
-    <p class="hero-subtitle">Проектирую пространства, которые формируют новый опыт — от интерьеров до жилых комплексов и инновационных сообществ.</p>
-  </div>
-  <div class="hero-scroll-indicator">
-    <div class="scroll-line"></div>
-    <span class="scroll-text">Scroll</span>
-  </div>
-  <div class="hero-3d-label">Interactive 3D Scene</div>
-</section>
+<!-- Scroll Spacer for 3D Journey -->
+<div class="scroll-spacer"></div>
 
-<!-- About Section -->
+<!-- Content Sections -->
+<div class="content-sections">
+
 <section id="about">
-  <div class="section-number">01</div>
-  <div class="section-divider"></div>
-  <h2 class="section-title">Обо <em>мне</em></h2>
+  <div class="s-num">01</div>
+  <div class="s-div"></div>
+  <h2 class="s-title">Обо <em>мне</em></h2>
   <div class="about-grid">
     <div class="about-text">
-      <p>Архитектор с 7-летним опытом проектирования жилых, общественных и коммерческих объектов. Работаю на всех стадиях — от первого эскиза до авторского надзора на стройке.</p>
-      <div class="about-highlight">
-        «Хорошая архитектура — это когда пространство работает на человека, а не наоборот»
-      </div>
-      <p>Мой подход строится на балансе функциональности и эстетики. Каждое решение рождается из контекста: места, людей и задачи. Среди реализованных проектов — жилые комплексы, интерьеры и концепция IT-деревни.</p>
+      <p>Архитектор с 7-летним опытом проектирования жилых, общественных и коммерческих объектов. Работаю на всех стадиях — от первого эскиза до авторского надзора на площадке.</p>
+      <div class="about-quote">«Хорошая архитектура — когда пространство работает на человека, а не наоборот»</div>
+      <p>Среди моих проектов — концепция IT-деревни, жилые интерьеры и многофункциональные жилые комплексы. Каждое решение рождается из контекста места и потребностей людей.</p>
     </div>
-    <div class="about-stats">
-      <div class="stat">
-        <div class="stat-number">7<span class="stat-suffix">+</span></div>
-        <div class="stat-label">Лет опыта</div>
-      </div>
-      <div class="stat">
-        <div class="stat-number">100<span class="stat-suffix">+</span></div>
-        <div class="stat-label">Проектов</div>
-      </div>
-      <div class="stat">
-        <div class="stat-number">3</div>
-        <div class="stat-label">Ключевых<br>направления</div>
-      </div>
-      <div class="stat">
-        <div class="stat-number">∞</div>
-        <div class="stat-label">Стремление<br>к совершенству</div>
-      </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">7<span>+</span></div><div class="stat-l">Лет опыта</div></div>
+      <div class="stat"><div class="stat-n">100<span>+</span></div><div class="stat-l">Проектов</div></div>
+      <div class="stat"><div class="stat-n">3</div><div class="stat-l">Направления</div></div>
+      <div class="stat"><div class="stat-n">∞</div><div class="stat-l">Стремление</div></div>
     </div>
   </div>
 </section>
 
-<!-- Projects Section -->
 <section id="projects">
-  <div class="section-number">02</div>
-  <div class="section-divider"></div>
-  <h2 class="section-title">Избранные <em>проекты</em></h2>
-  <div class="projects-container">
+  <div class="s-num">02</div>
+  <div class="s-div"></div>
+  <h2 class="s-title">Избранные <em>проекты</em></h2>
 
-    <div class="project-card" onclick="toggleProject(0)">
-      <span class="project-num">01</span>
-      <span class="project-name">IT-деревня</span>
-      <span class="project-type">Концепция</span>
-      <span class="project-arrow">→</span>
-    </div>
-    <div class="project-detail" id="project-0">
-      <div class="project-detail-inner">
-        <div class="project-image-placeholder">
-          <span class="placeholder-icon">◇</span>
-          <span class="placeholder-text">Фото проекта</span>
-        </div>
-        <div class="project-info">
-          <h4>IT-деревня</h4>
-          <p>Концепция инновационного сообщества, объединяющего жилое пространство и рабочую среду для IT-специалистов. Природное окружение, устойчивые технологии и архитектура, способствующая креативности и продуктивности.</p>
-          <div class="project-tags">
-            <span class="project-tag">Мастер-план</span>
-            <span class="project-tag">Концепция</span>
-            <span class="project-tag">Устойчивое развитие</span>
-          </div>
-        </div>
+  <div class="project-row" onclick="toggleProj(0)">
+    <span class="num">01</span>
+    <span class="name">IT-деревня</span>
+    <span class="type">Концепция</span>
+    <span class="arrow">→</span>
+  </div>
+  <div class="project-expand" id="proj-0">
+    <div class="project-expand-inner">
+      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
+      <div class="proj-info">
+        <h4>IT-деревня</h4>
+        <p>Концепция инновационного сообщества для IT-специалистов. Жилое пространство и рабочая среда в природном окружении с устойчивыми технологиями.</p>
+        <div class="proj-tags"><span class="proj-tag">Мастер-план</span><span class="proj-tag">Концепция</span><span class="proj-tag">Устойчивое развитие</span></div>
       </div>
     </div>
+  </div>
 
-    <div class="project-card" onclick="toggleProject(1)">
-      <span class="project-num">02</span>
-      <span class="project-name">Интерьер</span>
-      <span class="project-type">Жилой интерьер</span>
-      <span class="project-arrow">→</span>
-    </div>
-    <div class="project-detail" id="project-1">
-      <div class="project-detail-inner">
-        <div class="project-image-placeholder">
-          <span class="placeholder-icon">◇</span>
-          <span class="placeholder-text">Фото проекта</span>
-        </div>
-        <div class="project-info">
-          <h4>Интерьер</h4>
-          <p>Продуманное жилое пространство, где каждая деталь подчинена логике комфорта. Натуральные материалы, сценарии освещения и внимание к эргономике создают среду, в которой хочется находиться.</p>
-          <div class="project-tags">
-            <span class="project-tag">Интерьер</span>
-            <span class="project-tag">Жилое</span>
-            <span class="project-tag">Реализовано</span>
-          </div>
-        </div>
+  <div class="project-row" onclick="toggleProj(1)">
+    <span class="num">02</span>
+    <span class="name">Интерьер</span>
+    <span class="type">Жилой интерьер</span>
+    <span class="arrow">→</span>
+  </div>
+  <div class="project-expand" id="proj-1">
+    <div class="project-expand-inner">
+      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
+      <div class="proj-info">
+        <h4>Интерьер</h4>
+        <p>Продуманное жилое пространство с натуральными материалами, сценариями освещения и эргономикой, создающей ощущение уюта и свободы.</p>
+        <div class="proj-tags"><span class="proj-tag">Интерьер</span><span class="proj-tag">Жилое</span><span class="proj-tag">Реализовано</span></div>
       </div>
     </div>
+  </div>
 
-    <div class="project-card" onclick="toggleProject(2)">
-      <span class="project-num">03</span>
-      <span class="project-name">Многофункциональный<br>Жилой Комплекс</span>
-      <span class="project-type">МЖК</span>
-      <span class="project-arrow">→</span>
-    </div>
-    <div class="project-detail" id="project-2">
-      <div class="project-detail-inner">
-        <div class="project-image-placeholder">
-          <span class="placeholder-icon">◇</span>
-          <span class="placeholder-text">Фото проекта</span>
-        </div>
-        <div class="project-info">
-          <h4>Многофункциональный Жилой Комплекс</h4>
-          <p>Комплекс, объединяющий жилые, коммерческие и общественные функции. Продуманная инфраструктура, дворовые пространства без автомобилей и архитектурная идентичность, выделяющая проект в городской среде.</p>
-          <div class="project-tags">
-            <span class="project-tag">Жилой комплекс</span>
-            <span class="project-tag">Многофункциональный</span>
-            <span class="project-tag">Проект</span>
-          </div>
-        </div>
+  <div class="project-row" onclick="toggleProj(2)">
+    <span class="num">03</span>
+    <span class="name">Многофункциональный Жилой Комплекс</span>
+    <span class="type">МЖК</span>
+    <span class="arrow">→</span>
+  </div>
+  <div class="project-expand" id="proj-2">
+    <div class="project-expand-inner">
+      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
+      <div class="proj-info">
+        <h4>Многофункциональный Жилой Комплекс</h4>
+        <p>Комплекс с жилыми, коммерческими и общественными функциями. Безавтомобильные дворы, продуманная инфраструктура и сильная архитектурная идентичность.</p>
+        <div class="proj-tags"><span class="proj-tag">Жилой комплекс</span><span class="proj-tag">Многофункциональный</span><span class="proj-tag">Проект</span></div>
       </div>
     </div>
-
   </div>
 </section>
 
-<!-- Skills Section -->
 <section id="skills">
-  <div class="section-number">03</div>
-  <div class="section-divider"></div>
-  <h2 class="section-title">Навыки и <em>софт</em></h2>
+  <div class="s-num">03</div>
+  <div class="s-div"></div>
+  <h2 class="s-title">Навыки и <em>софт</em></h2>
   <div class="skills-grid">
-
-    <div class="skill-group">
-      <div class="skill-group-icon">△</div>
-      <h3 class="skill-group-title">Проектирование</h3>
-      <ul class="skill-list">
-        <li class="skill-item">
-          <span class="skill-name">AutoCAD</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="95"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">Revit</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="85"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">ArchiCAD</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="80"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">SketchUp</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="70"></span></span>
-        </li>
+    <div class="skill-box">
+      <div class="icon">△</div>
+      <h3>Проектирование</h3>
+      <ul>
+        <li><span class="n">AutoCAD</span><span class="sk-bar"><span class="sk-fill" style="width:95%"></span></span></li>
+        <li><span class="n">Revit</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+        <li><span class="n">ArchiCAD</span><span class="sk-bar"><span class="sk-fill" style="width:80%"></span></span></li>
+        <li><span class="n">SketchUp</span><span class="sk-bar"><span class="sk-fill" style="width:70%"></span></span></li>
       </ul>
     </div>
-
-    <div class="skill-group">
-      <div class="skill-group-icon">◎</div>
-      <h3 class="skill-group-title">Визуализация</h3>
-      <ul class="skill-list">
-        <li class="skill-item">
-          <span class="skill-name">3ds Max</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="90"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">V-Ray / Corona</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="85"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">Lumion</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="65"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">Enscape</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="60"></span></span>
-        </li>
+    <div class="skill-box">
+      <div class="icon">◎</div>
+      <h3>Визуализация</h3>
+      <ul>
+        <li><span class="n">3ds Max</span><span class="sk-bar"><span class="sk-fill" style="width:90%"></span></span></li>
+        <li><span class="n">V-Ray / Corona</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+        <li><span class="n">Lumion</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
+        <li><span class="n">Enscape</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
       </ul>
     </div>
-
-    <div class="skill-group">
-      <div class="skill-group-icon">◈</div>
-      <h3 class="skill-group-title">Графика</h3>
-      <ul class="skill-list">
-        <li class="skill-item">
-          <span class="skill-name">Photoshop</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="85"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">Illustrator</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="65"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">InDesign</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="60"></span></span>
-        </li>
-        <li class="skill-item">
-          <span class="skill-name">Figma</span>
-          <span class="skill-bar-wrapper"><span class="skill-bar" data-width="50"></span></span>
-        </li>
+    <div class="skill-box">
+      <div class="icon">◈</div>
+      <h3>Графика</h3>
+      <ul>
+        <li><span class="n">Photoshop</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+        <li><span class="n">Illustrator</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
+        <li><span class="n">InDesign</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
+        <li><span class="n">Figma</span><span class="sk-bar"><span class="sk-fill" style="width:50%"></span></span></li>
       </ul>
     </div>
-
   </div>
 </section>
 
-<!-- Contact Section -->
-<section class="contact-section" id="contact">
-  <div class="section-number">04</div>
-  <div class="section-title">Давайте создадим<br>что-то <em>вместе</em></div>
-  <div class="section-divider"></div>
+<section class="contact" id="contact">
+  <div class="s-num">04</div>
+  <div class="s-title">Давайте создадим<br>что-то <em>вместе</em></div>
+  <div class="s-div"></div>
   <a href="mailto:xxx" class="contact-email">xxx</a>
   <div class="contact-links">
-    <a href="#" class="contact-link">Telegram</a>
-    <a href="#" class="contact-link">Behance</a>
-    <a href="#" class="contact-link">Instagram</a>
+    <a href="#">Telegram</a>
+    <a href="#">Behance</a>
+    <a href="#">Instagram</a>
   </div>
 </section>
 
-<!-- Footer -->
 <footer>
-  <div class="footer-left">© 2026 Artem Dobrovolsky</div>
-  <div class="footer-right">Architecture & Design</div>
+  <span>© 2026 Artem Dobrovolsky</span>
+  <span>Architecture & Design</span>
 </footer>
 
-</div><!-- end .content -->
+</div>
 
 <script>
-// ===== THREE.JS — FULL 3D BACKGROUND =====
-(function() {
-  const canvas = document.getElementById('bg-canvas');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x000000, 0);
+// ============================================================
+//  THREE.JS — IMMERSIVE CONSTRUCTION JOURNEY
+// ============================================================
+const canvas = document.getElementById('scene-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x08080a);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  const group = new THREE.Group();
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x08080a, 0.035);
 
-  // — BUILDING 1: Tall tower —
-  const b1 = new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 6, 2));
-  const m1 = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.35 });
-  const tower = new THREE.LineSegments(b1, m1);
-  tower.position.set(3, 0.5, -1);
-  group.add(tower);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 8, 25);
 
-  // — BUILDING 2: Wide low block —
-  const b2 = new THREE.EdgesGeometry(new THREE.BoxGeometry(5, 2.5, 3));
-  const m2 = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.25 });
-  const block = new THREE.LineSegments(b2, m2);
-  block.position.set(-1, -1.2, 1);
-  group.add(block);
+// --- LIGHTS ---
+const ambLight = new THREE.AmbientLight(0x222222, 0.5);
+scene.add(ambLight);
 
-  // — BUILDING 3: Medium cube —
-  const b3 = new THREE.EdgesGeometry(new THREE.BoxGeometry(2.5, 3.5, 2.5));
-  const m3 = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.2 });
-  const cube = new THREE.LineSegments(b3, m3);
-  cube.position.set(-3.5, -0.5, -2);
-  group.add(cube);
+const dirLight = new THREE.DirectionalLight(0xffeedd, 0);
+dirLight.position.set(8, 15, 5);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(1024, 1024);
+scene.add(dirLight);
 
-  // — Roof plane / overhang —
-  const roofGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 0.06, 3));
-  const roofMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.18 });
-  const roof = new THREE.LineSegments(roofGeo, roofMat);
-  roof.position.set(1, 3.8, 0);
-  roof.rotation.z = 0.08;
-  group.add(roof);
+const accentLight = new THREE.PointLight(0xc8a97e, 0, 30);
+accentLight.position.set(-5, 8, 3);
+scene.add(accentLight);
 
-  // — Floating window frames —
-  for (let i = 0; i < 5; i++) {
-    const fGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.8, 1.1));
-    const fMat = new THREE.LineBasicMaterial({ color: 0xe8e4df, transparent: true, opacity: 0.06 + Math.random() * 0.06 });
-    const frame = new THREE.LineSegments(fGeo, fMat);
-    frame.position.set(
-      (Math.random() - 0.5) * 10,
-      (Math.random() - 0.5) * 6,
-      (Math.random() - 0.5) * 6 - 2
-    );
-    frame.rotation.y = Math.random() * 0.5;
-    group.add(frame);
-  }
+const rimLight = new THREE.PointLight(0x4488ff, 0, 25);
+rimLight.position.set(8, 5, -8);
+scene.add(rimLight);
 
-  // — Ground grid —
-  const gridSize = 18;
-  const gridGeo = new THREE.PlaneGeometry(gridSize, gridSize, gridSize, gridSize);
-  const gridEdges = new THREE.EdgesGeometry(gridGeo);
-  const gridMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.04 });
-  const grid = new THREE.LineSegments(gridEdges, gridMat);
-  grid.rotation.x = -Math.PI / 2;
-  grid.position.y = -3.5;
-  group.add(grid);
+// --- MATERIALS ---
+const wireMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
+const wireMatDim = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
+const wireMatWhite = new THREE.LineBasicMaterial({ color: 0xe8e4df, transparent: true, opacity: 0 });
 
-  // — Accent diagonal line —
-  const lineGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-6, -3, 0),
-    new THREE.Vector3(6, 5, -3)
+const solidMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0, roughness: 0.7, metalness: 0.1 });
+const solidMatLight = new THREE.MeshStandardMaterial({ color: 0x252525, transparent: true, opacity: 0, roughness: 0.6, metalness: 0.15 });
+const solidMatAccent = new THREE.MeshStandardMaterial({ color: 0x2a2218, transparent: true, opacity: 0, roughness: 0.5, metalness: 0.2 });
+const glassMat = new THREE.MeshStandardMaterial({ color: 0x88bbff, transparent: true, opacity: 0, roughness: 0.1, metalness: 0.8 });
+
+// --- GROUND GRID ---
+const gridGroup = new THREE.Group();
+const gridN = 20;
+const gridSpacing = 1.5;
+const gridOffset = (gridN * gridSpacing) / 2;
+const gridLineMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
+
+for (let i = 0; i <= gridN; i++) {
+  const pos = i * gridSpacing - gridOffset;
+  // horizontal
+  const hGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-gridOffset, 0, pos),
+    new THREE.Vector3(gridOffset, 0, pos)
   ]);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0.1 });
-  group.add(new THREE.Line(lineGeo, lineMat));
+  gridGroup.add(new THREE.Line(hGeo, gridLineMat));
+  // vertical
+  const vGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(pos, 0, -gridOffset),
+    new THREE.Vector3(pos, 0, gridOffset)
+  ]);
+  gridGroup.add(new THREE.Line(vGeo, gridLineMat));
+}
+gridGroup.position.y = -0.01;
+scene.add(gridGroup);
 
-  // — Particles —
-  const pCount = 80;
-  const pGeo = new THREE.BufferGeometry();
-  const pPos = new Float32Array(pCount * 3);
-  for (let i = 0; i < pCount * 3; i++) {
-    pPos[i] = (Math.random() - 0.5) * 20;
+// --- FOUNDATION (Stage 1) ---
+const foundationGroup = new THREE.Group();
+
+// Foundation slab wireframe
+const foundGeo = new THREE.BoxGeometry(10, 0.5, 7);
+const foundEdges = new THREE.EdgesGeometry(foundGeo);
+const foundWire = new THREE.LineSegments(foundEdges, wireMat);
+foundWire.position.y = 0.25;
+foundationGroup.add(foundWire);
+
+// Foundation pillars
+for (let x = -3.5; x <= 3.5; x += 3.5) {
+  for (let z = -2; z <= 2; z += 2) {
+    const pillarGeo = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+    const pillarEdges = new THREE.EdgesGeometry(pillarGeo);
+    const pillar = new THREE.LineSegments(pillarEdges, wireMatDim);
+    pillar.position.set(x, 1.1, z);
+    foundationGroup.add(pillar);
   }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  const pMat = new THREE.PointsMaterial({
-    color: 0xc8a97e,
-    size: 0.025,
-    transparent: true,
-    opacity: 0.5
-  });
-  const particles = new THREE.Points(pGeo, pMat);
-  group.add(particles);
+}
+scene.add(foundationGroup);
 
-  scene.add(group);
-  camera.position.set(0, 1, 12);
+// --- SKETCH LINES (Stage 2) ---
+const sketchGroup = new THREE.Group();
 
-  // — Mouse parallax —
-  let mouseX = 0, mouseY = 0;
-  let targetRotY = -0.3, targetRotX = 0;
-  document.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-  });
-
-  // — Scroll-based camera movement —
-  let scrollY = 0;
-  window.addEventListener('scroll', () => {
-    scrollY = window.pageYOffset;
-  });
-
-  function animate() {
-    requestAnimationFrame(animate);
-
-    // Slow auto-rotation
-    targetRotY = -0.3 + mouseX * 0.2;
-    targetRotX = mouseY * 0.1;
-
-    group.rotation.y += (targetRotY - group.rotation.y) * 0.02;
-    group.rotation.x += (targetRotX - group.rotation.x) * 0.02;
-
-    // Camera moves up as user scrolls
-    const scrollFactor = scrollY / (document.body.scrollHeight - window.innerHeight);
-    camera.position.y = 1 + scrollFactor * 8;
-    camera.position.z = 12 - scrollFactor * 4;
-    camera.lookAt(0, scrollFactor * 3, 0);
-
-    // Gentle float for particles
-    particles.rotation.y += 0.0003;
-    particles.rotation.x += 0.0001;
-
-    // Pulsing opacity for tower
-    tower.material.opacity = 0.3 + Math.sin(Date.now() * 0.001) * 0.08;
-
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-})();
-
-// ===== LOADER =====
-window.addEventListener('load', () => {
-  const loader = document.getElementById('loader');
-  gsap.to(loader, {
-    opacity: 0,
-    duration: 0.8,
-    delay: 1.5,
-    onComplete: () => {
-      loader.style.display = 'none';
-      animateHero();
-    }
-  });
-});
-
-// ===== HERO ANIMATIONS =====
-function animateHero() {
-  const tl = gsap.timeline();
-  tl.fromTo('.hero-label', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.8 })
-    .fromTo('.hero-title', { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, '-=0.4')
-    .fromTo('.hero-subtitle', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
-    .fromTo('.hero-3d-label', { opacity: 0 }, { opacity: 1, duration: 0.6 }, '-=0.3');
+// Building outline — like hand-drawn lines
+function sketchLine(points, mat) {
+  const geo = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(...p)));
+  return new THREE.Line(geo, mat || wireMatWhite);
 }
 
-// ===== CUSTOM CURSOR =====
-(function() {
-  const dot = document.getElementById('cursor-dot');
-  const ring = document.getElementById('cursor-ring');
-  let cx = 0, cy = 0, dx = 0, dy = 0;
+// Main building silhouette
+const sk1 = sketchLine([[-5,0.5,-3.5],[-5,8,-3.5],[-1,10,-3.5],[4,10,-3.5],[4,0.5,-3.5]]);
+const sk2 = sketchLine([[-5,0.5,3.5],[-5,8,3.5],[-1,10,3.5],[4,10,3.5],[4,0.5,3.5]]);
+const sk3 = sketchLine([[-5,8,-3.5],[-5,8,3.5]]);
+const sk4 = sketchLine([[-1,10,-3.5],[-1,10,3.5]]);
+const sk5 = sketchLine([[4,10,-3.5],[4,10,3.5]]);
+const sk6 = sketchLine([[4,0.5,-3.5],[4,0.5,3.5]]);
+const sk7 = sketchLine([[-5,0.5,-3.5],[-5,0.5,3.5]]);
+// Roof line
+const sk8 = sketchLine([[-1,10,-3.5],[4,10,-3.5],[4,10,3.5],[-1,10,3.5],[-1,10,-3.5]]);
+// Mid floor
+const sk9 = sketchLine([[-5,5,-3.5],[4,5,-3.5],[4,5,3.5],[-5,5,3.5],[-5,5,-3.5]]);
+// Extension
+const sk10 = sketchLine([[4,0.5,-3.5],[8,0.5,-2.5],[8,4,-2.5],[4,4,-3.5]]);
+const sk11 = sketchLine([[4,0.5,3.5],[8,0.5,2.5],[8,4,2.5],[4,4,3.5]]);
+const sk12 = sketchLine([[8,4,-2.5],[8,4,2.5]]);
+const sk13 = sketchLine([[8,0.5,-2.5],[8,0.5,2.5]]);
 
-  document.addEventListener('mousemove', (e) => {
-    cx = e.clientX; cy = e.clientY;
-    dot.style.left = cx - 3 + 'px';
-    dot.style.top = cy - 3 + 'px';
-  });
+[sk1,sk2,sk3,sk4,sk5,sk6,sk7,sk8,sk9,sk10,sk11,sk12,sk13].forEach(l => {
+  l.material = wireMatWhite.clone();
+  l.material.opacity = 0;
+  sketchGroup.add(l);
+});
+scene.add(sketchGroup);
 
-  function animateCursor() {
-    dx += (cx - dx) * 0.12;
-    dy += (cy - dy) * 0.12;
-    ring.style.left = dx - 18 + 'px';
-    ring.style.top = dy - 18 + 'px';
-    requestAnimationFrame(animateCursor);
+// --- 3D MODEL WIREFRAME (Stage 3) ---
+const modelGroup = new THREE.Group();
+
+// Main volume
+const mainGeo = new THREE.BoxGeometry(9, 9.5, 7);
+const mainEdges = new THREE.LineSegments(new THREE.EdgesGeometry(mainGeo), wireMat.clone());
+mainEdges.position.set(-0.5, 5.25, 0);
+mainEdges.material.opacity = 0;
+modelGroup.add(mainEdges);
+
+// Tower
+const towerGeo = new THREE.BoxGeometry(4, 12, 5);
+const towerEdges = new THREE.LineSegments(new THREE.EdgesGeometry(towerGeo), wireMat.clone());
+towerEdges.position.set(-3, 6.5, 0);
+towerEdges.material.opacity = 0;
+modelGroup.add(towerEdges);
+
+// Extension wing
+const wingGeo = new THREE.BoxGeometry(4, 4, 5);
+const wingEdges = new THREE.LineSegments(new THREE.EdgesGeometry(wingGeo), wireMat.clone());
+wingEdges.position.set(6, 2.5, 0);
+wingEdges.material.opacity = 0;
+modelGroup.add(wingEdges);
+
+// Canopy
+const canopyGeo = new THREE.BoxGeometry(14, 0.15, 8);
+const canopyEdges = new THREE.LineSegments(new THREE.EdgesGeometry(canopyGeo), wireMat.clone());
+canopyEdges.position.set(0, 10.2, 0);
+canopyEdges.material.opacity = 0;
+modelGroup.add(canopyEdges);
+
+// Floor plates
+for (let y = 3; y <= 9; y += 3) {
+  const floorGeo = new THREE.BoxGeometry(8.8, 0.08, 6.8);
+  const floorE = new THREE.LineSegments(new THREE.EdgesGeometry(floorGeo), wireMatDim.clone());
+  floorE.position.set(-0.5, y, 0);
+  floorE.material.opacity = 0;
+  modelGroup.add(floorE);
+}
+
+scene.add(modelGroup);
+
+// --- SOLID BUILDING (Stage 4) ---
+const solidGroup = new THREE.Group();
+
+// Main body
+const mainSolid = new THREE.Mesh(new THREE.BoxGeometry(9, 9.5, 7), solidMat.clone());
+mainSolid.position.set(-0.5, 5.25, 0);
+mainSolid.castShadow = true;
+mainSolid.receiveShadow = true;
+solidGroup.add(mainSolid);
+
+// Tower
+const towerSolid = new THREE.Mesh(new THREE.BoxGeometry(4.1, 12.1, 5.1), solidMatLight.clone());
+towerSolid.position.set(-3, 6.55, 0);
+towerSolid.castShadow = true;
+solidGroup.add(towerSolid);
+
+// Wing
+const wingSolid = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 5), solidMat.clone());
+wingSolid.position.set(6, 2.5, 0);
+wingSolid.castShadow = true;
+solidGroup.add(wingSolid);
+
+// Canopy
+const canopySolid = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), solidMatAccent.clone());
+canopySolid.position.set(0, 10.2, 0);
+canopySolid.castShadow = true;
+solidGroup.add(canopySolid);
+
+// Windows
+const winGeo = new THREE.PlaneGeometry(1.2, 1.8);
+for (let floor = 0; floor < 3; floor++) {
+  for (let w = 0; w < 4; w++) {
+    const win = new THREE.Mesh(winGeo, glassMat.clone());
+    win.position.set(-3.5 + w * 2.2, 2.5 + floor * 3, 3.51);
+    solidGroup.add(win);
+    const winBack = win.clone();
+    winBack.position.z = -3.51;
+    winBack.rotation.y = Math.PI;
+    winBack.material = glassMat.clone();
+    solidGroup.add(winBack);
   }
-  animateCursor();
+}
 
-  // Scale up on links
-  document.querySelectorAll('a, .project-card, button').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      ring.style.width = '56px';
-      ring.style.height = '56px';
-      ring.style.left = dx - 28 + 'px';
-      ring.style.top = dy - 28 + 'px';
-      ring.style.borderColor = 'var(--accent)';
-    });
-    el.addEventListener('mouseleave', () => {
-      ring.style.width = '36px';
-      ring.style.height = '36px';
-      ring.style.borderColor = 'var(--accent)';
-    });
-  });
-})();
+// Ground plane
+const groundGeo = new THREE.PlaneGeometry(50, 50);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.95 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.01;
+ground.receiveShadow = true;
+ground.material.transparent = true;
+ground.material.opacity = 0;
+solidGroup.add(ground);
 
-// ===== SCROLL ANIMATIONS =====
+scene.add(solidGroup);
+
+// --- PARTICLES ---
+const particleCount = 120;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3] = (Math.random()-0.5) * 40;
+  pPos[i*3+1] = Math.random() * 20;
+  pPos[i*3+2] = (Math.random()-0.5) * 40;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ color: 0xc8a97e, size: 0.04, transparent: true, opacity: 0.4 });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// ============================================================
+//  MOUSE
+// ============================================================
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ============================================================
+//  SCROLL PROGRESS & STAGES
+// ============================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// Nav background on scroll
+let scrollProgress = 0;
+const stages = document.querySelectorAll('.stage-label');
+const scrollHint = document.getElementById('scrollHint');
+
+// Track scroll through spacer
 ScrollTrigger.create({
-  start: 100,
+  trigger: '.scroll-spacer',
+  start: 'top top',
+  end: 'bottom bottom',
+  scrub: true,
+  onUpdate: self => {
+    scrollProgress = self.progress;
+    updateScene(scrollProgress);
+    updateStageLabels(scrollProgress);
+  }
+});
+
+// Nav bg
+ScrollTrigger.create({
+  start: 80,
   onEnter: () => document.getElementById('navbar').classList.add('scrolled'),
   onLeaveBack: () => document.getElementById('navbar').classList.remove('scrolled')
 });
 
-// Animate sections on scroll
-document.querySelectorAll('section:not(.hero):not(.contact-section)').forEach(section => {
-  gsap.fromTo(section.querySelectorAll('.section-number, .section-divider, .section-title'),
-    { opacity: 0, y: 50 },
-    {
-      opacity: 1, y: 0, duration: 0.9, stagger: 0.15, ease: 'power2.out',
-      scrollTrigger: { trigger: section, start: 'top 80%' }
-    }
-  );
+// Progress bar
+window.addEventListener('scroll', () => {
+  const p = window.pageYOffset / (document.body.scrollHeight - window.innerHeight);
+  document.getElementById('progress').style.width = (p * 100) + '%';
 });
 
-// Animate stats
-document.querySelectorAll('.stat').forEach((stat, i) => {
-  gsap.fromTo(stat,
-    { opacity: 0, y: 40 },
-    {
-      opacity: 1, y: 0, duration: 0.7, delay: i * 0.12,
-      scrollTrigger: { trigger: stat, start: 'top 85%' }
-    }
-  );
-});
-
-// Animate project cards
-document.querySelectorAll('.project-card').forEach((card, i) => {
-  gsap.fromTo(card,
-    { opacity: 0, x: -40 },
-    {
-      opacity: 1, x: 0, duration: 0.7, delay: i * 0.12, ease: 'power2.out',
-      scrollTrigger: { trigger: card, start: 'top 88%' }
-    }
-  );
-});
-
-// Animate skill groups
-document.querySelectorAll('.skill-group').forEach((grp, i) => {
-  gsap.fromTo(grp,
-    { opacity: 0, y: 50 },
-    {
-      opacity: 1, y: 0, duration: 0.7, delay: i * 0.15,
-      scrollTrigger: { trigger: grp, start: 'top 85%' }
-    }
-  );
-});
-
-// Animate skill bars
-document.querySelectorAll('.skill-bar').forEach(bar => {
-  const width = bar.getAttribute('data-width');
-  gsap.fromTo(bar,
-    { width: '0%' },
-    {
-      width: width + '%', duration: 1.2, ease: 'power2.out',
-      scrollTrigger: { trigger: bar, start: 'top 90%' }
-    }
-  );
-});
-
-// Contact section
-gsap.fromTo('.contact-section .section-number, .contact-section .section-title, .contact-section .section-divider, .contact-email, .contact-links',
-  { opacity: 0, y: 40 },
-  {
-    opacity: 1, y: 0, duration: 0.9, stagger: 0.15,
-    scrollTrigger: { trigger: '.contact-section', start: 'top 75%' }
-  }
-);
-
-// ===== PROJECT TOGGLE =====
-function toggleProject(index) {
-  const detail = document.getElementById('project-' + index);
-  const wasActive = detail.classList.contains('active');
-  document.querySelectorAll('.project-detail').forEach(d => d.classList.remove('active'));
-  if (!wasActive) detail.classList.add('active');
+function updateStageLabels(p) {
+  const current = p < 0.05 ? 0 : p < 0.25 ? 1 : p < 0.45 ? 2 : p < 0.7 ? 3 : 4;
+  stages.forEach((s, i) => s.classList.toggle('active', i === current));
+  scrollHint.classList.toggle('show', p < 0.03);
 }
 
-// ===== SMOOTH SCROLL NAV =====
-document.querySelectorAll('nav a[href^="#"]').forEach(link => {
-  link.addEventListener('click', (e) => {
+// ============================================================
+//  UPDATE SCENE BASED ON SCROLL
+// ============================================================
+function updateScene(p) {
+  // --- STAGE 0: Intro (0-0.05) - Empty, just particles ---
+  // --- STAGE 1: Foundation (0.05-0.25) ---
+  // --- STAGE 2: Sketch (0.25-0.45) ---
+  // --- STAGE 3: 3D Model (0.45-0.7) ---
+  // --- STAGE 4: Materials (0.7-1.0) ---
+
+  // Camera path
+  const camPaths = [
+    { pos: [0, 8, 25], look: [0, 3, 0] },      // 0: overview
+    { pos: [12, 3, 12], look: [0, 1, 0] },      // 1: foundation low angle
+    { pos: [-10, 10, 14], look: [0, 5, 0] },    // 2: sketch perspective
+    { pos: [8, 7, 10], look: [0, 5, 0] },       // 3: orbit model
+    { pos: [5, 6, 14], look: [0, 5, 0] },       // 4: final beauty shot
+  ];
+
+  let idx, localP;
+  if (p < 0.05) { idx = 0; localP = p / 0.05; }
+  else if (p < 0.25) { idx = 0; localP = (p - 0.05) / 0.2; }
+  else if (p < 0.45) { idx = 1; localP = (p - 0.25) / 0.2; }
+  else if (p < 0.7) { idx = 2; localP = (p - 0.45) / 0.25; }
+  else { idx = 3; localP = (p - 0.7) / 0.3; }
+
+  localP = Math.min(1, Math.max(0, localP));
+  const smooth = localP * localP * (3 - 2 * localP); // smoothstep
+
+  const from = camPaths[idx];
+  const to = camPaths[idx + 1];
+  camera.position.set(
+    from.pos[0] + (to.pos[0] - from.pos[0]) * smooth + mouseX * 0.5,
+    from.pos[1] + (to.pos[1] - from.pos[1]) * smooth + mouseY * 0.2,
+    from.pos[2] + (to.pos[2] - from.pos[2]) * smooth
+  );
+  const lx = from.look[0] + (to.look[0] - from.look[0]) * smooth;
+  const ly = from.look[1] + (to.look[1] - from.look[1]) * smooth;
+  const lz = from.look[2] + (to.look[2] - from.look[2]) * smooth;
+  camera.lookAt(lx, ly, lz);
+
+  // --- GRID ---
+  const gridOp = p < 0.05 ? p / 0.05 * 0.08 : p < 0.6 ? 0.08 : 0.08 * (1 - (p - 0.6) / 0.15);
+  gridLineMat.opacity = Math.max(0, Math.min(0.08, gridOp));
+
+  // --- FOUNDATION ---
+  const foundP = p < 0.05 ? 0 : p < 0.25 ? (p - 0.05) / 0.2 : 1;
+  wireMat.opacity = foundP < 1 ? foundP * 0.5 : Math.max(0, 0.5 - (p - 0.25) / 0.3 * 0.5);
+  wireMatDim.opacity = wireMat.opacity * 0.6;
+  foundationGroup.position.y = foundP < 1 ? -2 + foundP * 2 : 0;
+
+  // --- SKETCH LINES ---
+  const sketchP = p < 0.25 ? 0 : p < 0.45 ? (p - 0.25) / 0.2 : p < 0.6 ? 1 : Math.max(0, 1 - (p - 0.6) / 0.15);
+  sketchGroup.children.forEach((line, i) => {
+    const delay = i * 0.06;
+    const lineP = Math.max(0, Math.min(1, (sketchP - delay) / (1 - delay)));
+    line.material.opacity = lineP * 0.4 * (p < 0.6 ? 1 : sketchP);
+  });
+
+  // --- 3D MODEL WIREFRAME ---
+  const modelP = p < 0.45 ? 0 : p < 0.7 ? (p - 0.45) / 0.25 : 1;
+  const modelFade = p < 0.75 ? 1 : Math.max(0, 1 - (p - 0.75) / 0.15);
+  modelGroup.children.forEach((child, i) => {
+    const delay = i * 0.08;
+    const childP = Math.max(0, Math.min(1, (modelP - delay) / (1 - delay)));
+    child.material.opacity = childP * 0.6 * modelFade;
+    child.position.y = child.position.y; // keep position
+  });
+
+  // Scale up model
+  const modelScale = p < 0.45 ? 0.8 : 0.8 + modelP * 0.2;
+  modelGroup.scale.setScalar(Math.min(1, modelScale));
+
+  // --- SOLID BUILDING ---
+  const solidP = p < 0.7 ? 0 : (p - 0.7) / 0.3;
+  const solidSmooth = solidP * solidP * (3 - 2 * solidP);
+
+  solidGroup.children.forEach(child => {
+    if (child.material) {
+      if (child.material === ground.material) {
+        child.material.opacity = solidSmooth * 0.8;
+      } else {
+        child.material.opacity = solidSmooth;
+      }
+    }
+  });
+
+  // --- LIGHTS ---
+  dirLight.intensity = solidSmooth * 1.5;
+  accentLight.intensity = solidSmooth * 2;
+  rimLight.intensity = solidSmooth * 1;
+  ambLight.intensity = 0.3 + solidSmooth * 0.7;
+
+  // --- FOG ---
+  scene.fog.density = 0.035 - solidSmooth * 0.015;
+}
+
+// ============================================================
+//  ANIMATE
+// ============================================================
+function animate() {
+  requestAnimationFrame(animate);
+  particles.rotation.y += 0.0002;
+  // Gentle building sway
+  const t = Date.now() * 0.001;
+  solidGroup.rotation.y = Math.sin(t * 0.15) * 0.01;
+  modelGroup.rotation.y = solidGroup.rotation.y;
+  sketchGroup.rotation.y = solidGroup.rotation.y;
+  renderer.render(scene, camera);
+}
+animate();
+
+// ============================================================
+//  RESIZE
+// ============================================================
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================================
+//  LOADER
+// ============================================================
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    gsap.to('#loader', {
+      opacity: 0, duration: 0.8,
+      onComplete: () => {
+        document.getElementById('loader').style.display = 'none';
+        scrollHint.classList.add('show');
+        stages[0].classList.add('active');
+      }
+    });
+  }, 1800);
+});
+
+// ============================================================
+//  GSAP SECTION ANIMATIONS
+// ============================================================
+document.querySelectorAll('.content-sections section').forEach(sec => {
+  gsap.fromTo(sec.querySelectorAll('.s-num,.s-div,.s-title'),
+    { opacity: 0, y: 50 },
+    { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: 'power2.out',
+      scrollTrigger: { trigger: sec, start: 'top 80%' } }
+  );
+});
+
+document.querySelectorAll('.project-row').forEach((r, i) => {
+  gsap.fromTo(r, { opacity: 0, x: -30 },
+    { opacity: 1, x: 0, duration: 0.6, delay: i * 0.1,
+      scrollTrigger: { trigger: r, start: 'top 88%' } });
+});
+
+document.querySelectorAll('.skill-box').forEach((b, i) => {
+  gsap.fromTo(b, { opacity: 0, y: 40 },
+    { opacity: 1, y: 0, duration: 0.6, delay: i * 0.12,
+      scrollTrigger: { trigger: b, start: 'top 85%' } });
+});
+
+document.querySelectorAll('.stat').forEach((s, i) => {
+  gsap.fromTo(s, { opacity: 0, y: 30 },
+    { opacity: 1, y: 0, duration: 0.5, delay: i * 0.1,
+      scrollTrigger: { trigger: s, start: 'top 88%' } });
+});
+
+// ============================================================
+//  PROJECT TOGGLE
+// ============================================================
+function toggleProj(i) {
+  const el = document.getElementById('proj-' + i);
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.project-expand').forEach(e => e.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+
+// ============================================================
+//  SMOOTH NAV
+// ============================================================
+document.querySelectorAll('nav a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
     e.preventDefault();
-    const target = document.querySelector(link.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
   });
 });
 </script>
