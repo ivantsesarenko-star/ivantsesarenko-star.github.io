@@ -12,12 +12,13 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#08080a;
-  --text:#e8e4df;
-  --text2:#7a756f;
-  --muted:#3a3632;
-  --accent:#c8a97e;
-  --accentDim:rgba(200,169,126,0.12);
+  --bg:#06060a;
+  --text:#eae7e2;
+  --text2:#8a857f;
+  --muted:#4a4641;
+  --accent:#d4b48a;
+  --accentBright:#e8c89e;
+  --accentDim:rgba(212,180,138,0.12);
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
@@ -26,76 +27,70 @@ html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--bg)}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::selection{background:var(--accent);color:var(--bg)}
 
-/* === LOADER === */
+/* LOADER */
 #loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
 #loader .spinner{width:44px;height:44px;border:1px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #loader .name{font-family:var(--serif);font-size:18px;letter-spacing:6px;text-transform:uppercase;color:var(--text2)}
 #loader .sub{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
 
-/* === 3D CANVAS === */
+/* CANVAS */
 #scene-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
 
-/* === OVERLAY UI === */
-.overlay{position:relative;z-index:2;pointer-events:none}
-.overlay a,.overlay button{pointer-events:auto}
-
-/* === NAV === */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 40px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto;transition:background .4s}
-nav.scrolled{background:rgba(8,8,10,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04)}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 40px;display:flex;justify-content:space-between;align-items:center;transition:background .4s}
+nav.scrolled{background:rgba(6,6,10,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04)}
 .nav-logo{font-family:var(--serif);font-size:18px;font-weight:300;letter-spacing:7px;text-transform:uppercase;color:var(--text);text-decoration:none}
 .nav-logo span{color:var(--accent)}
 .nav-links{display:flex;gap:32px;list-style:none}
 .nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text);text-decoration:none;opacity:.45;transition:opacity .3s}
 .nav-links a:hover{opacity:1}
 
-/* === STAGE LABELS (appear during 3D journey) === */
+/* STAGE LABELS */
 .stage-label{
   position:fixed;z-index:10;
-  opacity:0;
-  transition:opacity .6s;
-  pointer-events:none;
+  opacity:0;pointer-events:none;
+  transition:opacity .8s cubic-bezier(.4,0,.2,1);
 }
-.stage-label.active{opacity:1}
-
-.stage-label .num{
-  font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--accent);
-  display:flex;align-items:center;gap:12px;margin-bottom:14px;
-}
-.stage-label .num::before{content:'';width:32px;height:1px;background:var(--accent)}
-.stage-label h2{
-  font-family:var(--serif);font-size:clamp(32px,5vw,60px);font-weight:300;line-height:1.1;margin-bottom:16px;
-}
+.stage-label.visible{opacity:1}
+.stage-label .num{font-family:var(--mono);font-size:12px;letter-spacing:4px;color:var(--accent);display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.stage-label .num::before{content:'';width:36px;height:1px;background:var(--accent)}
+.stage-label h2{font-family:var(--serif);font-size:clamp(36px,5.5vw,68px);font-weight:300;line-height:1.08;margin-bottom:18px}
 .stage-label h2 em{font-style:italic;color:var(--accent)}
-.stage-label p{
-  font-size:14px;color:var(--text2);line-height:1.8;max-width:380px;
-}
+.stage-label p{font-size:15px;color:var(--text2);line-height:1.85;max-width:400px}
 
-/* Stage positions */
 #stage-0{left:40px;top:50%;transform:translateY(-50%)}
 #stage-1{left:40px;top:50%;transform:translateY(-50%)}
 #stage-2{right:40px;top:50%;transform:translateY(-50%);text-align:right}
 #stage-2 .num{justify-content:flex-end}
 #stage-2 .num::before{order:2}
 #stage-2 p{margin-left:auto}
-#stage-3{left:40px;top:50%;transform:translateY(-50%)}
+#stage-3{left:40px;bottom:15%;transform:none}
 #stage-4{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
 #stage-4 .num{justify-content:center}
 #stage-4 p{margin:0 auto}
 
-/* === SCROLL SPACER === */
-.scroll-spacer{height:600vh;position:relative;z-index:0}
+/* PROGRESS */
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accentBright));z-index:999;width:0}
 
-/* === CONTENT SECTIONS (after 3D journey) === */
+/* SCROLL HINT */
+.scroll-hint{position:fixed;bottom:36px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;transition:opacity .6s}
+.scroll-hint.show{opacity:1}
+.scroll-hint .arrow{width:20px;height:20px;border-right:1px solid var(--accent);border-bottom:1px solid var(--accent);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(-4px);opacity:.4}50%{transform:rotate(45deg) translateY(4px);opacity:1}}
+.scroll-hint span{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+/* SCROLL SPACER */
+.scroll-spacer{height:700vh;position:relative;z-index:0}
+
+/* CONTENT */
 .content-sections{position:relative;z-index:3;background:var(--bg)}
-
 section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .s-num{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:10px}
 .s-div{width:50px;height:1px;background:var(--accent);margin-bottom:40px}
 .s-title{font-family:var(--serif);font-size:clamp(32px,4.5vw,56px);font-weight:300;margin-bottom:48px;line-height:1.15}
 .s-title em{font-style:italic;color:var(--accent)}
 
-/* About */
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px}
 .about-text p{font-size:15px;color:var(--text2);line-height:1.9;margin-bottom:20px}
 .about-quote{font-family:var(--serif);font-size:22px;color:var(--text);line-height:1.6;padding-left:20px;border-left:2px solid var(--accent);margin:32px 0}
@@ -105,11 +100,7 @@ section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .stat-n span{font-size:24px;opacity:.5}
 .stat-l{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:6px}
 
-/* Projects */
-.project-row{
-  display:grid;grid-template-columns:60px 1fr 160px 50px;align-items:center;
-  padding:36px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .35s;
-}
+.project-row{display:grid;grid-template-columns:60px 1fr 160px 50px;align-items:center;padding:36px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .35s}
 .project-row:first-child{border-top:1px solid rgba(255,255,255,.05)}
 .project-row:hover{padding-left:20px;background:linear-gradient(90deg,var(--accentDim),transparent 60%)}
 .project-row .num{font-family:var(--mono);font-size:12px;color:var(--muted)}
@@ -118,11 +109,10 @@ section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .project-row .type{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:right}
 .project-row .arrow{font-size:18px;color:var(--muted);text-align:right;transition:all .3s}
 .project-row:hover .arrow{color:var(--accent);transform:translateX(4px)}
-
 .project-expand{max-height:0;overflow:hidden;transition:max-height .55s cubic-bezier(.4,0,.2,1)}
 .project-expand.open{max-height:500px}
 .project-expand-inner{padding:32px 0 32px 60px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px}
-.proj-img{aspect-ratio:16/10;background:var(--bg);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.proj-img{aspect-ratio:16/10;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;position:relative;overflow:hidden}
 .proj-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,var(--accentDim))}
 .proj-img .ico{font-size:28px;color:var(--muted);position:relative;z-index:1}
 .proj-img .txt{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
@@ -131,12 +121,11 @@ section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .proj-tags{display:flex;flex-wrap:wrap;gap:6px}
 .proj-tag{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(255,255,255,.06);color:var(--text2)}
 
-/* Skills */
 .skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
 .skill-box{background:rgba(255,255,255,.02);padding:40px 28px;border:1px solid rgba(255,255,255,.04);transition:all .4s;position:relative;overflow:hidden}
 .skill-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .5s}
 .skill-box:hover::before{transform:scaleX(1)}
-.skill-box:hover{background:rgba(255,255,255,.03);border-color:rgba(200,169,126,.12)}
+.skill-box:hover{background:rgba(255,255,255,.03);border-color:rgba(212,180,138,.12)}
 .skill-box .icon{font-size:24px;color:var(--accent);margin-bottom:16px}
 .skill-box h3{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:24px}
 .skill-box ul{list-style:none;display:flex;flex-direction:column;gap:12px}
@@ -145,7 +134,6 @@ section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .sk-bar{width:72px;height:2px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
 .sk-fill{height:100%;background:var(--accent);border-radius:1px}
 
-/* Contact */
 .contact{text-align:center;padding:160px 40px}
 .contact .s-div{margin:0 auto 40px}
 .contact-email{font-family:var(--serif);font-size:clamp(20px,3vw,34px);font-weight:300;color:var(--accent);text-decoration:none;position:relative;display:inline-block}
@@ -155,93 +143,70 @@ section{padding:120px 40px;max-width:1100px;margin:0 auto}
 .contact-links a{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
 .contact-links a:hover{color:var(--accent)}
 
-/* Footer */
 footer{padding:28px 40px;border-top:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
 
-/* Progress bar */
-#progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);z-index:999;width:0;transition:none}
+.grain{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
 
-/* Scroll hint */
-.scroll-hint{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transition:opacity .5s}
-.scroll-hint.show{opacity:1}
-.scroll-hint .line{width:1px;height:32px;background:linear-gradient(to bottom,transparent,var(--accent));animation:scrollPulse 1.5s ease-in-out infinite}
-@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
-.scroll-hint span{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
-
-/* Grain */
-.grain{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
-
-/* Responsive */
 @media(max-width:900px){
-  nav{padding:18px 20px}
-  .nav-links{display:none}
+  nav{padding:18px 20px}.nav-links{display:none}
   section{padding:80px 20px}
-  .about-grid{grid-template-columns:1fr;gap:40px}
-  .skills-grid{grid-template-columns:1fr}
-  .project-row{grid-template-columns:40px 1fr 50px}
-  .project-row .type{display:none}
+  .about-grid,.skills-grid{grid-template-columns:1fr}
+  .about-grid{gap:40px}
+  .project-row{grid-template-columns:40px 1fr 50px}.project-row .type{display:none}
   .project-expand-inner{grid-template-columns:1fr;padding-left:0}
-  .stage-label{left:20px!important;right:20px!important;transform:translateY(-50%)!important;text-align:left!important}
+  .stage-label{left:20px!important;right:20px!important;text-align:left!important}
   .stage-label .num{justify-content:flex-start!important}
-  .stage-label p{margin:0!important}
+  .stage-label p{margin:0!important;max-width:100%!important}
+  #stage-4{transform:translate(-50%,-50%)!important}
   .contact-links{flex-direction:column;gap:20px}
   footer{flex-direction:column;gap:8px;padding:20px}
 }
 </style>
 </head>
 <body>
-
 <div class="grain"></div>
 <div id="progress"></div>
 
-<!-- Loader -->
 <div id="loader">
   <div class="spinner"></div>
   <div class="name">Artem Dobrovolsky</div>
   <div class="sub">Loading experience</div>
 </div>
 
-<!-- 3D Canvas -->
 <canvas id="scene-canvas"></canvas>
 
-<!-- Scroll Hint -->
 <div class="scroll-hint" id="scrollHint">
-  <div class="line"></div>
-  <span>Scroll</span>
+  <div class="arrow"></div>
+  <span>Scroll down</span>
 </div>
 
 <!-- Stage Labels -->
 <div class="stage-label" id="stage-0">
   <div class="num">00 — Начало</div>
   <h2>Artem<br>Dobrovolsky<br><em>Architect</em></h2>
-  <p>Добро пожаловать в моё портфолио. Прокручивайте вниз — мы пройдём путь создания архитектурного проекта.</p>
+  <p>Прокручивайте вниз — мы пройдём путь создания здания от фундамента до финальной визуализации.</p>
 </div>
-
 <div class="stage-label" id="stage-1">
   <div class="num">01 — Фундамент</div>
   <h2>Всё начинается<br>с <em>основания</em></h2>
-  <p>Каждый проект начинается с анализа участка, геологии и функциональных задач. Фундамент — это обещание будущей формы.</p>
+  <p>Геодезия, грунт, несущие конструкции. Фундамент — невидимая сила будущего здания.</p>
 </div>
-
 <div class="stage-label" id="stage-2">
   <div class="num">02 — Эскиз</div>
-  <h2>Линии<br><em>замысла</em></h2>
-  <p>Первые наброски — диалог между идеей и пространством. Силуэт здания рождается из контекста и интуиции.</p>
+  <h2>Рождение<br><em>замысла</em></h2>
+  <p>Первые линии на бумаге. Силуэт здания проявляется из контекста и интуиции архитектора.</p>
 </div>
-
 <div class="stage-label" id="stage-3">
-  <div class="num">03 — Объём</div>
-  <h2>Форма обретает<br><em>глубину</em></h2>
-  <p>Плоский эскиз превращается в трёхмерную модель. Появляются пропорции, свет, масштаб.</p>
+  <div class="num">03 — Модель</div>
+  <h2>Форма обретает<br><em>объём</em></h2>
+  <p>Двумерный эскиз становится трёхмерной структурой. Этажи, стены, проёмы — всё встаёт на свои места.</p>
 </div>
-
 <div class="stage-label" id="stage-4">
-  <div class="num">04 — Материал</div>
+  <div class="num">04 — Визуализация</div>
   <h2>Архитектура<br><em>оживает</em></h2>
-  <p>Текстуры, материалы и свет превращают модель в пространство, которое можно почувствовать.</p>
+  <p>Материалы, свет и тени превращают каркас в пространство, которое хочется ощутить.</p>
 </div>
 
-<!-- Navigation -->
 <nav id="navbar">
   <a href="#" class="nav-logo">Artem<span>.</span></a>
   <ul class="nav-links">
@@ -252,21 +217,17 @@ footer{padding:28px 40px;border-top:1px solid rgba(255,255,255,.04);display:flex
   </ul>
 </nav>
 
-<!-- Scroll Spacer for 3D Journey -->
 <div class="scroll-spacer"></div>
 
-<!-- Content Sections -->
 <div class="content-sections">
-
 <section id="about">
-  <div class="s-num">01</div>
-  <div class="s-div"></div>
+  <div class="s-num">01</div><div class="s-div"></div>
   <h2 class="s-title">Обо <em>мне</em></h2>
   <div class="about-grid">
     <div class="about-text">
-      <p>Архитектор с 7-летним опытом проектирования жилых, общественных и коммерческих объектов. Работаю на всех стадиях — от первого эскиза до авторского надзора на площадке.</p>
+      <p>Архитектор с 7-летним опытом проектирования жилых, общественных и коммерческих объектов. Работаю на всех стадиях — от первого эскиза до авторского надзора.</p>
       <div class="about-quote">«Хорошая архитектура — когда пространство работает на человека, а не наоборот»</div>
-      <p>Среди моих проектов — концепция IT-деревни, жилые интерьеры и многофункциональные жилые комплексы. Каждое решение рождается из контекста места и потребностей людей.</p>
+      <p>Среди моих проектов — концепция IT-деревни, жилые интерьеры и многофункциональные комплексы. Каждое решение рождается из контекста места и потребностей людей.</p>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-n">7<span>+</span></div><div class="stat-l">Лет опыта</div></div>
@@ -278,97 +239,40 @@ footer{padding:28px 40px;border-top:1px solid rgba(255,255,255,.04);display:flex
 </section>
 
 <section id="projects">
-  <div class="s-num">02</div>
-  <div class="s-div"></div>
+  <div class="s-num">02</div><div class="s-div"></div>
   <h2 class="s-title">Избранные <em>проекты</em></h2>
+  <div class="project-row" onclick="toggleProj(0)"><span class="num">01</span><span class="name">IT-деревня</span><span class="type">Концепция</span><span class="arrow">→</span></div>
+  <div class="project-expand" id="proj-0"><div class="project-expand-inner"><div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div><div class="proj-info"><h4>IT-деревня</h4><p>Концепция инновационного сообщества для IT-специалистов. Жилое пространство и рабочая среда в природном окружении.</p><div class="proj-tags"><span class="proj-tag">Мастер-план</span><span class="proj-tag">Концепция</span><span class="proj-tag">Устойчивое развитие</span></div></div></div></div>
 
-  <div class="project-row" onclick="toggleProj(0)">
-    <span class="num">01</span>
-    <span class="name">IT-деревня</span>
-    <span class="type">Концепция</span>
-    <span class="arrow">→</span>
-  </div>
-  <div class="project-expand" id="proj-0">
-    <div class="project-expand-inner">
-      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
-      <div class="proj-info">
-        <h4>IT-деревня</h4>
-        <p>Концепция инновационного сообщества для IT-специалистов. Жилое пространство и рабочая среда в природном окружении с устойчивыми технологиями.</p>
-        <div class="proj-tags"><span class="proj-tag">Мастер-план</span><span class="proj-tag">Концепция</span><span class="proj-tag">Устойчивое развитие</span></div>
-      </div>
-    </div>
-  </div>
+  <div class="project-row" onclick="toggleProj(1)"><span class="num">02</span><span class="name">Интерьер</span><span class="type">Жилой интерьер</span><span class="arrow">→</span></div>
+  <div class="project-expand" id="proj-1"><div class="project-expand-inner"><div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div><div class="proj-info"><h4>Интерьер</h4><p>Продуманное жилое пространство с натуральными материалами и сценариями освещения.</p><div class="proj-tags"><span class="proj-tag">Интерьер</span><span class="proj-tag">Жилое</span><span class="proj-tag">Реализовано</span></div></div></div></div>
 
-  <div class="project-row" onclick="toggleProj(1)">
-    <span class="num">02</span>
-    <span class="name">Интерьер</span>
-    <span class="type">Жилой интерьер</span>
-    <span class="arrow">→</span>
-  </div>
-  <div class="project-expand" id="proj-1">
-    <div class="project-expand-inner">
-      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
-      <div class="proj-info">
-        <h4>Интерьер</h4>
-        <p>Продуманное жилое пространство с натуральными материалами, сценариями освещения и эргономикой, создающей ощущение уюта и свободы.</p>
-        <div class="proj-tags"><span class="proj-tag">Интерьер</span><span class="proj-tag">Жилое</span><span class="proj-tag">Реализовано</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="project-row" onclick="toggleProj(2)">
-    <span class="num">03</span>
-    <span class="name">Многофункциональный Жилой Комплекс</span>
-    <span class="type">МЖК</span>
-    <span class="arrow">→</span>
-  </div>
-  <div class="project-expand" id="proj-2">
-    <div class="project-expand-inner">
-      <div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div>
-      <div class="proj-info">
-        <h4>Многофункциональный Жилой Комплекс</h4>
-        <p>Комплекс с жилыми, коммерческими и общественными функциями. Безавтомобильные дворы, продуманная инфраструктура и сильная архитектурная идентичность.</p>
-        <div class="proj-tags"><span class="proj-tag">Жилой комплекс</span><span class="proj-tag">Многофункциональный</span><span class="proj-tag">Проект</span></div>
-      </div>
-    </div>
-  </div>
+  <div class="project-row" onclick="toggleProj(2)"><span class="num">03</span><span class="name">Многофункциональный Жилой Комплекс</span><span class="type">МЖК</span><span class="arrow">→</span></div>
+  <div class="project-expand" id="proj-2"><div class="project-expand-inner"><div class="proj-img"><span class="ico">◇</span><span class="txt">Фото проекта</span></div><div class="proj-info"><h4>МЖК</h4><p>Комплекс с жилыми, коммерческими и общественными функциями. Безавтомобильные дворы и сильная архитектурная идентичность.</p><div class="proj-tags"><span class="proj-tag">Жилой комплекс</span><span class="proj-tag">Многофункциональный</span></div></div></div></div>
 </section>
 
 <section id="skills">
-  <div class="s-num">03</div>
-  <div class="s-div"></div>
+  <div class="s-num">03</div><div class="s-div"></div>
   <h2 class="s-title">Навыки и <em>софт</em></h2>
   <div class="skills-grid">
-    <div class="skill-box">
-      <div class="icon">△</div>
-      <h3>Проектирование</h3>
-      <ul>
-        <li><span class="n">AutoCAD</span><span class="sk-bar"><span class="sk-fill" style="width:95%"></span></span></li>
-        <li><span class="n">Revit</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
-        <li><span class="n">ArchiCAD</span><span class="sk-bar"><span class="sk-fill" style="width:80%"></span></span></li>
-        <li><span class="n">SketchUp</span><span class="sk-bar"><span class="sk-fill" style="width:70%"></span></span></li>
-      </ul>
-    </div>
-    <div class="skill-box">
-      <div class="icon">◎</div>
-      <h3>Визуализация</h3>
-      <ul>
-        <li><span class="n">3ds Max</span><span class="sk-bar"><span class="sk-fill" style="width:90%"></span></span></li>
-        <li><span class="n">V-Ray / Corona</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
-        <li><span class="n">Lumion</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
-        <li><span class="n">Enscape</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
-      </ul>
-    </div>
-    <div class="skill-box">
-      <div class="icon">◈</div>
-      <h3>Графика</h3>
-      <ul>
-        <li><span class="n">Photoshop</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
-        <li><span class="n">Illustrator</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
-        <li><span class="n">InDesign</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
-        <li><span class="n">Figma</span><span class="sk-bar"><span class="sk-fill" style="width:50%"></span></span></li>
-      </ul>
-    </div>
+    <div class="skill-box"><div class="icon">△</div><h3>Проектирование</h3><ul>
+      <li><span class="n">AutoCAD</span><span class="sk-bar"><span class="sk-fill" style="width:95%"></span></span></li>
+      <li><span class="n">Revit</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+      <li><span class="n">ArchiCAD</span><span class="sk-bar"><span class="sk-fill" style="width:80%"></span></span></li>
+      <li><span class="n">SketchUp</span><span class="sk-bar"><span class="sk-fill" style="width:70%"></span></span></li>
+    </ul></div>
+    <div class="skill-box"><div class="icon">◎</div><h3>Визуализация</h3><ul>
+      <li><span class="n">3ds Max</span><span class="sk-bar"><span class="sk-fill" style="width:90%"></span></span></li>
+      <li><span class="n">V-Ray / Corona</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+      <li><span class="n">Lumion</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
+      <li><span class="n">Enscape</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
+    </ul></div>
+    <div class="skill-box"><div class="icon">◈</div><h3>Графика</h3><ul>
+      <li><span class="n">Photoshop</span><span class="sk-bar"><span class="sk-fill" style="width:85%"></span></span></li>
+      <li><span class="n">Illustrator</span><span class="sk-bar"><span class="sk-fill" style="width:65%"></span></span></li>
+      <li><span class="n">InDesign</span><span class="sk-bar"><span class="sk-fill" style="width:60%"></span></span></li>
+      <li><span class="n">Figma</span><span class="sk-bar"><span class="sk-fill" style="width:50%"></span></span></li>
+    </ul></div>
   </div>
 </section>
 
@@ -377,417 +281,458 @@ footer{padding:28px 40px;border-top:1px solid rgba(255,255,255,.04);display:flex
   <div class="s-title">Давайте создадим<br>что-то <em>вместе</em></div>
   <div class="s-div"></div>
   <a href="mailto:xxx" class="contact-email">xxx</a>
-  <div class="contact-links">
-    <a href="#">Telegram</a>
-    <a href="#">Behance</a>
-    <a href="#">Instagram</a>
-  </div>
+  <div class="contact-links"><a href="#">Telegram</a><a href="#">Behance</a><a href="#">Instagram</a></div>
 </section>
 
-<footer>
-  <span>© 2026 Artem Dobrovolsky</span>
-  <span>Architecture & Design</span>
-</footer>
-
+<footer><span>© 2026 Artem Dobrovolsky</span><span>Architecture & Design</span></footer>
 </div>
 
 <script>
 // ============================================================
-//  THREE.JS — IMMERSIVE CONSTRUCTION JOURNEY
+//  RENDERER
 // ============================================================
+const W = window.innerWidth, H = window.innerHeight;
 const canvas = document.getElementById('scene-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setSize(window.innerWidth, window.innerHeight);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(W, H);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x08080a);
+renderer.setClearColor(0x06060a);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x08080a, 0.035);
+scene.fog = new THREE.FogExp2(0x06060a, 0.018);
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 300);
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 8, 25);
-
-// --- LIGHTS ---
-const ambLight = new THREE.AmbientLight(0x222222, 0.5);
-scene.add(ambLight);
-
-const dirLight = new THREE.DirectionalLight(0xffeedd, 0);
-dirLight.position.set(8, 15, 5);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(1024, 1024);
-scene.add(dirLight);
-
-const accentLight = new THREE.PointLight(0xc8a97e, 0, 30);
-accentLight.position.set(-5, 8, 3);
-scene.add(accentLight);
-
-const rimLight = new THREE.PointLight(0x4488ff, 0, 25);
-rimLight.position.set(8, 5, -8);
-scene.add(rimLight);
-
-// --- MATERIALS ---
-const wireMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
-const wireMatDim = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
-const wireMatWhite = new THREE.LineBasicMaterial({ color: 0xe8e4df, transparent: true, opacity: 0 });
-
-const solidMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0, roughness: 0.7, metalness: 0.1 });
-const solidMatLight = new THREE.MeshStandardMaterial({ color: 0x252525, transparent: true, opacity: 0, roughness: 0.6, metalness: 0.15 });
-const solidMatAccent = new THREE.MeshStandardMaterial({ color: 0x2a2218, transparent: true, opacity: 0, roughness: 0.5, metalness: 0.2 });
-const glassMat = new THREE.MeshStandardMaterial({ color: 0x88bbff, transparent: true, opacity: 0, roughness: 0.1, metalness: 0.8 });
-
-// --- GROUND GRID ---
-const gridGroup = new THREE.Group();
-const gridN = 20;
-const gridSpacing = 1.5;
-const gridOffset = (gridN * gridSpacing) / 2;
-const gridLineMat = new THREE.LineBasicMaterial({ color: 0xc8a97e, transparent: true, opacity: 0 });
-
-for (let i = 0; i <= gridN; i++) {
-  const pos = i * gridSpacing - gridOffset;
-  // horizontal
-  const hGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-gridOffset, 0, pos),
-    new THREE.Vector3(gridOffset, 0, pos)
-  ]);
-  gridGroup.add(new THREE.Line(hGeo, gridLineMat));
-  // vertical
-  const vGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(pos, 0, -gridOffset),
-    new THREE.Vector3(pos, 0, gridOffset)
-  ]);
-  gridGroup.add(new THREE.Line(vGeo, gridLineMat));
+// ============================================================
+//  MATERIALS — bright, glowing
+// ============================================================
+function glowLineMat(color, opacity) {
+  return new THREE.LineBasicMaterial({ color, transparent: true, opacity, linewidth: 1 });
 }
-gridGroup.position.y = -0.01;
+
+// For double-line glow effect
+function addGlowEdges(parent, geometry, color, op, glowOp) {
+  const edges = new THREE.EdgesGeometry(geometry);
+  const main = new THREE.LineSegments(edges, glowLineMat(color, 0));
+  main.userData.targetOp = op;
+  parent.add(main);
+  // Glow duplicate slightly larger
+  const glow = new THREE.LineSegments(edges, glowLineMat(color, 0));
+  glow.userData.targetOp = glowOp;
+  glow.scale.multiplyScalar(1.003);
+  parent.add(glow);
+  return [main, glow];
+}
+
+const GOLD = 0xd4b48a;
+const GOLD_BRIGHT = 0xf0d8a8;
+const WHITE = 0xeae7e2;
+const BLUE = 0x6699cc;
+
+// ============================================================
+//  GROUND GRID — bright
+// ============================================================
+const gridGroup = new THREE.Group();
+const gridMat = glowLineMat(GOLD, 0);
+const gridGlowMat = glowLineMat(GOLD_BRIGHT, 0);
+const GN = 24, GS = 1.2, GO = GN * GS / 2;
+for (let i = 0; i <= GN; i++) {
+  const p = i * GS - GO;
+  const h = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-GO,0,p), new THREE.Vector3(GO,0,p)]);
+  const v = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(p,0,-GO), new THREE.Vector3(p,0,GO)]);
+  gridGroup.add(new THREE.Line(h, gridMat));
+  gridGroup.add(new THREE.Line(v, gridMat));
+}
+// glow cross at center
+const cx = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-GO,0,0), new THREE.Vector3(GO,0,0)]);
+const cz = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-GO), new THREE.Vector3(0,0,GO)]);
+gridGroup.add(new THREE.Line(cx, gridGlowMat));
+gridGroup.add(new THREE.Line(cz, gridGlowMat));
 scene.add(gridGroup);
 
-// --- FOUNDATION (Stage 1) ---
-const foundationGroup = new THREE.Group();
+// ============================================================
+//  STAGE 1: FOUNDATION
+// ============================================================
+const foundGroup = new THREE.Group();
+// Big slab
+addGlowEdges(foundGroup, new THREE.BoxGeometry(12, 0.6, 8), GOLD_BRIGHT, 0.9, 0.3);
+foundGroup.children.forEach(c => c.position.y = 0.3);
 
-// Foundation slab wireframe
-const foundGeo = new THREE.BoxGeometry(10, 0.5, 7);
-const foundEdges = new THREE.EdgesGeometry(foundGeo);
-const foundWire = new THREE.LineSegments(foundEdges, wireMat);
-foundWire.position.y = 0.25;
-foundationGroup.add(foundWire);
-
-// Foundation pillars
-for (let x = -3.5; x <= 3.5; x += 3.5) {
-  for (let z = -2; z <= 2; z += 2) {
-    const pillarGeo = new THREE.BoxGeometry(0.4, 1.2, 0.4);
-    const pillarEdges = new THREE.EdgesGeometry(pillarGeo);
-    const pillar = new THREE.LineSegments(pillarEdges, wireMatDim);
-    pillar.position.set(x, 1.1, z);
-    foundationGroup.add(pillar);
+// Pillars
+const pillarPositions = [];
+for (let x = -4.5; x <= 4.5; x += 3) {
+  for (let z = -2.5; z <= 2.5; z += 2.5) {
+    pillarPositions.push([x, z]);
   }
 }
-scene.add(foundationGroup);
+pillarPositions.forEach(([x, z]) => {
+  const els = addGlowEdges(foundGroup, new THREE.BoxGeometry(0.5, 2, 0.5), GOLD, 0.7, 0.25);
+  els.forEach(e => e.position.set(x, 1.6, z));
+});
 
-// --- SKETCH LINES (Stage 2) ---
+// Rebar lines
+for (let x = -4; x <= 4; x += 2) {
+  const g = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(x, 0.65, -4), new THREE.Vector3(x, 0.65, 4)
+  ]);
+  foundGroup.add(new THREE.Line(g, glowLineMat(0xff8844, 0)));
+}
+foundGroup.position.y = -3;
+scene.add(foundGroup);
+
+// ============================================================
+//  STAGE 2: SKETCH LINES
+// ============================================================
 const sketchGroup = new THREE.Group();
+const sketchMats = [];
 
-// Building outline — like hand-drawn lines
-function sketchLine(points, mat) {
-  const geo = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(...p)));
-  return new THREE.Line(geo, mat || wireMatWhite);
+function skLine(pts, color) {
+  const m = glowLineMat(color || WHITE, 0);
+  sketchMats.push(m);
+  const g = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(...p)));
+  const l = new THREE.Line(g, m);
+  sketchGroup.add(l);
+  // glow
+  const m2 = glowLineMat(color || GOLD_BRIGHT, 0);
+  sketchMats.push(m2);
+  const l2 = new THREE.Line(g.clone(), m2);
+  sketchGroup.add(l2);
+  return l;
 }
 
-// Main building silhouette
-const sk1 = sketchLine([[-5,0.5,-3.5],[-5,8,-3.5],[-1,10,-3.5],[4,10,-3.5],[4,0.5,-3.5]]);
-const sk2 = sketchLine([[-5,0.5,3.5],[-5,8,3.5],[-1,10,3.5],[4,10,3.5],[4,0.5,3.5]]);
-const sk3 = sketchLine([[-5,8,-3.5],[-5,8,3.5]]);
-const sk4 = sketchLine([[-1,10,-3.5],[-1,10,3.5]]);
-const sk5 = sketchLine([[4,10,-3.5],[4,10,3.5]]);
-const sk6 = sketchLine([[4,0.5,-3.5],[4,0.5,3.5]]);
-const sk7 = sketchLine([[-5,0.5,-3.5],[-5,0.5,3.5]]);
-// Roof line
-const sk8 = sketchLine([[-1,10,-3.5],[4,10,-3.5],[4,10,3.5],[-1,10,3.5],[-1,10,-3.5]]);
-// Mid floor
-const sk9 = sketchLine([[-5,5,-3.5],[4,5,-3.5],[4,5,3.5],[-5,5,3.5],[-5,5,-3.5]]);
+// Main building outline
+skLine([[-5,0.6,-3.5],[-5,9,-3.5],[-1.5,11.5,-3.5],[5,11.5,-3.5],[5,0.6,-3.5]]);
+skLine([[-5,0.6,3.5],[-5,9,3.5],[-1.5,11.5,3.5],[5,11.5,3.5],[5,0.6,3.5]]);
+// Connecting lines
+skLine([[-5,9,-3.5],[-5,9,3.5]]);
+skLine([[-1.5,11.5,-3.5],[-1.5,11.5,3.5]]);
+skLine([[5,11.5,-3.5],[5,11.5,3.5]]);
+skLine([[5,0.6,-3.5],[5,0.6,3.5]]);
+skLine([[-5,0.6,-3.5],[-5,0.6,3.5]]);
+// Floor lines
+skLine([[-5,4,-3.5],[5,4,-3.5],[5,4,3.5],[-5,4,3.5],[-5,4,-3.5]], GOLD);
+skLine([[-5,7,-3.5],[5,7,-3.5],[5,7,3.5],[-5,7,3.5],[-5,7,-3.5]], GOLD);
 // Extension
-const sk10 = sketchLine([[4,0.5,-3.5],[8,0.5,-2.5],[8,4,-2.5],[4,4,-3.5]]);
-const sk11 = sketchLine([[4,0.5,3.5],[8,0.5,2.5],[8,4,2.5],[4,4,3.5]]);
-const sk12 = sketchLine([[8,4,-2.5],[8,4,2.5]]);
-const sk13 = sketchLine([[8,0.5,-2.5],[8,0.5,2.5]]);
+skLine([[5,0.6,-3.5],[9,0.6,-2.5],[9,5,-2.5],[5,5,-3.5]]);
+skLine([[5,0.6,3.5],[9,0.6,2.5],[9,5,2.5],[5,5,3.5]]);
+skLine([[9,5,-2.5],[9,5,2.5]]);
+skLine([[9,0.6,-2.5],[9,0.6,2.5]]);
+// Roof accent
+skLine([[-6,11.8,-4],[6,11.8,-4],[6,11.8,4],[-6,11.8,4],[-6,11.8,-4]], GOLD_BRIGHT);
 
-[sk1,sk2,sk3,sk4,sk5,sk6,sk7,sk8,sk9,sk10,sk11,sk12,sk13].forEach(l => {
-  l.material = wireMatWhite.clone();
-  l.material.opacity = 0;
-  sketchGroup.add(l);
-});
 scene.add(sketchGroup);
 
-// --- 3D MODEL WIREFRAME (Stage 3) ---
+// ============================================================
+//  STAGE 3: WIREFRAME MODEL
+// ============================================================
 const modelGroup = new THREE.Group();
+const modelMats = [];
+
+function addModelEdges(geo, pos, color) {
+  const c = color || GOLD;
+  const edges = new THREE.EdgesGeometry(geo);
+  const m1 = glowLineMat(c, 0); modelMats.push(m1);
+  const m2 = glowLineMat(GOLD_BRIGHT, 0); modelMats.push(m2);
+  const l1 = new THREE.LineSegments(edges, m1);
+  const l2 = new THREE.LineSegments(edges.clone(), m2);
+  l1.position.set(...pos);
+  l2.position.set(...pos);
+  l2.scale.multiplyScalar(1.004);
+  modelGroup.add(l1, l2);
+}
 
 // Main volume
-const mainGeo = new THREE.BoxGeometry(9, 9.5, 7);
-const mainEdges = new THREE.LineSegments(new THREE.EdgesGeometry(mainGeo), wireMat.clone());
-mainEdges.position.set(-0.5, 5.25, 0);
-mainEdges.material.opacity = 0;
-modelGroup.add(mainEdges);
-
+addModelEdges(new THREE.BoxGeometry(10, 10.5, 7), [0, 5.85, 0]);
 // Tower
-const towerGeo = new THREE.BoxGeometry(4, 12, 5);
-const towerEdges = new THREE.LineSegments(new THREE.EdgesGeometry(towerGeo), wireMat.clone());
-towerEdges.position.set(-3, 6.5, 0);
-towerEdges.material.opacity = 0;
-modelGroup.add(towerEdges);
-
-// Extension wing
-const wingGeo = new THREE.BoxGeometry(4, 4, 5);
-const wingEdges = new THREE.LineSegments(new THREE.EdgesGeometry(wingGeo), wireMat.clone());
-wingEdges.position.set(6, 2.5, 0);
-wingEdges.material.opacity = 0;
-modelGroup.add(wingEdges);
-
+addModelEdges(new THREE.BoxGeometry(4, 13, 5.5), [-3, 7.1, 0], GOLD_BRIGHT);
+// Wing
+addModelEdges(new THREE.BoxGeometry(4.5, 5, 5), [7, 3.1, 0]);
 // Canopy
-const canopyGeo = new THREE.BoxGeometry(14, 0.15, 8);
-const canopyEdges = new THREE.LineSegments(new THREE.EdgesGeometry(canopyGeo), wireMat.clone());
-canopyEdges.position.set(0, 10.2, 0);
-canopyEdges.material.opacity = 0;
-modelGroup.add(canopyEdges);
-
-// Floor plates
-for (let y = 3; y <= 9; y += 3) {
-  const floorGeo = new THREE.BoxGeometry(8.8, 0.08, 6.8);
-  const floorE = new THREE.LineSegments(new THREE.EdgesGeometry(floorGeo), wireMatDim.clone());
-  floorE.position.set(-0.5, y, 0);
-  floorE.material.opacity = 0;
-  modelGroup.add(floorE);
+addModelEdges(new THREE.BoxGeometry(16, 0.2, 9), [0, 11.7, 0], WHITE);
+// Floors
+for (let y = 4; y <= 10; y += 3) {
+  addModelEdges(new THREE.BoxGeometry(9.8, 0.1, 6.8), [0, y, 0], 0x887755);
 }
+// Window frames on front
+for (let f = 0; f < 3; f++) {
+  for (let w = 0; w < 5; w++) {
+    addModelEdges(new THREE.BoxGeometry(1.3, 1.8, 0.05), [-3.5+w*2, 2.5+f*3, 3.52], BLUE);
+  }
+}
+// Window frames on back
+for (let f = 0; f < 3; f++) {
+  for (let w = 0; w < 5; w++) {
+    addModelEdges(new THREE.BoxGeometry(1.3, 1.8, 0.05), [-3.5+w*2, 2.5+f*3, -3.52], BLUE);
+  }
+}
+// Staircase hint
+addModelEdges(new THREE.BoxGeometry(2, 10.5, 2), [3.5, 5.85, 0], 0x886644);
 
 scene.add(modelGroup);
 
-// --- SOLID BUILDING (Stage 4) ---
+// ============================================================
+//  STAGE 4: SOLID BUILDING
+// ============================================================
 const solidGroup = new THREE.Group();
 
-// Main body
-const mainSolid = new THREE.Mesh(new THREE.BoxGeometry(9, 9.5, 7), solidMat.clone());
-mainSolid.position.set(-0.5, 5.25, 0);
-mainSolid.castShadow = true;
-mainSolid.receiveShadow = true;
-solidGroup.add(mainSolid);
+const matDark = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.65, metalness: 0.15, transparent: true, opacity: 0 });
+const matMid = new THREE.MeshStandardMaterial({ color: 0x252527, roughness: 0.55, metalness: 0.2, transparent: true, opacity: 0 });
+const matLight = new THREE.MeshStandardMaterial({ color: 0x2e2e30, roughness: 0.5, metalness: 0.25, transparent: true, opacity: 0 });
+const matAccent = new THREE.MeshStandardMaterial({ color: 0x3a3020, roughness: 0.4, metalness: 0.3, transparent: true, opacity: 0 });
+const matGlass = new THREE.MeshStandardMaterial({ color: 0x88bbee, roughness: 0.05, metalness: 0.9, transparent: true, opacity: 0 });
+const matGround = new THREE.MeshStandardMaterial({ color: 0x0e0e10, roughness: 0.95, transparent: true, opacity: 0 });
+const solidMats = [matDark, matMid, matLight, matAccent, matGlass, matGround];
 
-// Tower
-const towerSolid = new THREE.Mesh(new THREE.BoxGeometry(4.1, 12.1, 5.1), solidMatLight.clone());
-towerSolid.position.set(-3, 6.55, 0);
-towerSolid.castShadow = true;
-solidGroup.add(towerSolid);
-
-// Wing
-const wingSolid = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 5), solidMat.clone());
-wingSolid.position.set(6, 2.5, 0);
-wingSolid.castShadow = true;
-solidGroup.add(wingSolid);
-
-// Canopy
-const canopySolid = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), solidMatAccent.clone());
-canopySolid.position.set(0, 10.2, 0);
-canopySolid.castShadow = true;
-solidGroup.add(canopySolid);
-
-// Windows
-const winGeo = new THREE.PlaneGeometry(1.2, 1.8);
-for (let floor = 0; floor < 3; floor++) {
-  for (let w = 0; w < 4; w++) {
-    const win = new THREE.Mesh(winGeo, glassMat.clone());
-    win.position.set(-3.5 + w * 2.2, 2.5 + floor * 3, 3.51);
-    solidGroup.add(win);
-    const winBack = win.clone();
-    winBack.position.z = -3.51;
-    winBack.rotation.y = Math.PI;
-    winBack.material = glassMat.clone();
-    solidGroup.add(winBack);
-  }
+function solidBox(geo, mat, pos, castS, recvS) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos);
+  if (castS) m.castShadow = true;
+  if (recvS) m.receiveShadow = true;
+  solidGroup.add(m);
+  return m;
 }
 
-// Ground plane
-const groundGeo = new THREE.PlaneGeometry(50, 50);
-const groundMat = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.95 });
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.01;
-ground.receiveShadow = true;
-ground.material.transparent = true;
-ground.material.opacity = 0;
-solidGroup.add(ground);
+solidBox(new THREE.BoxGeometry(10, 10.5, 7), matDark, [0,5.85,0], true, true);
+solidBox(new THREE.BoxGeometry(4.15, 13.15, 5.6), matMid, [-3,7.15,0], true, true);
+solidBox(new THREE.BoxGeometry(4.5, 5, 5), matDark, [7,3.1,0], true, true);
+solidBox(new THREE.BoxGeometry(16, 0.25, 9), matAccent, [0,11.7,0], true, false);
+// Staircase
+solidBox(new THREE.BoxGeometry(2.05, 10.6, 2.05), matLight, [3.5,5.85,0], true, false);
+// Windows
+for (let f = 0; f < 3; f++) {
+  for (let w = 0; w < 5; w++) {
+    solidBox(new THREE.PlaneGeometry(1.3, 1.8), matGlass, [-3.5+w*2, 2.5+f*3, 3.52], false, false);
+    const b = solidBox(new THREE.PlaneGeometry(1.3, 1.8), matGlass, [-3.5+w*2, 2.5+f*3, -3.52], false, false);
+    b.rotation.y = Math.PI;
+  }
+}
+// Side windows
+for (let f = 0; f < 3; f++) {
+  for (let w = 0; w < 3; w++) {
+    const wl = solidBox(new THREE.PlaneGeometry(1.3, 1.8), matGlass, [-5.01, 2.5+f*3, -1.5+w*1.8], false, false);
+    wl.rotation.y = -Math.PI/2;
+    const wr = solidBox(new THREE.PlaneGeometry(1.3, 1.8), matGlass, [5.01, 2.5+f*3, -1.5+w*1.8], false, false);
+    wr.rotation.y = Math.PI/2;
+  }
+}
+// Ground
+const gnd = solidBox(new THREE.PlaneGeometry(60, 60), matGround, [0,0,0], false, true);
+gnd.rotation.x = -Math.PI/2;
 
 scene.add(solidGroup);
 
-// --- PARTICLES ---
-const particleCount = 120;
+// ============================================================
+//  LIGHTS
+// ============================================================
+const ambLight = new THREE.AmbientLight(0x334455, 0.4);
+scene.add(ambLight);
+
+const dirLight = new THREE.DirectionalLight(0xffeedd, 0);
+dirLight.position.set(10, 20, 8);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.left = -20; dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 20; dirLight.shadow.camera.bottom = -10;
+dirLight.shadow.camera.far = 50;
+dirLight.shadow.bias = -0.001;
+scene.add(dirLight);
+
+const warmLight = new THREE.PointLight(0xd4b48a, 0, 40);
+warmLight.position.set(-6, 10, 5);
+scene.add(warmLight);
+
+const coolLight = new THREE.PointLight(0x4477aa, 0, 30);
+coolLight.position.set(10, 6, -8);
+scene.add(coolLight);
+
+const rimLight = new THREE.PointLight(0xffeedd, 0, 35);
+rimLight.position.set(0, 16, -10);
+scene.add(rimLight);
+
+// ============================================================
+//  PARTICLES — more and brighter
+// ============================================================
+const PC = 200;
 const pGeo = new THREE.BufferGeometry();
-const pPos = new Float32Array(particleCount * 3);
-for (let i = 0; i < particleCount; i++) {
-  pPos[i*3] = (Math.random()-0.5) * 40;
-  pPos[i*3+1] = Math.random() * 20;
-  pPos[i*3+2] = (Math.random()-0.5) * 40;
+const pPos = new Float32Array(PC * 3);
+for (let i = 0; i < PC; i++) {
+  pPos[i*3] = (Math.random()-.5)*50;
+  pPos[i*3+1] = Math.random()*25;
+  pPos[i*3+2] = (Math.random()-.5)*50;
 }
 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-const pMat = new THREE.PointsMaterial({ color: 0xc8a97e, size: 0.04, transparent: true, opacity: 0.4 });
+const pMat = new THREE.PointsMaterial({ color: GOLD_BRIGHT, size: 0.06, transparent: true, opacity: 0.6 });
 const particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
 // ============================================================
 //  MOUSE
 // ============================================================
-let mouseX = 0, mouseY = 0;
+let mx = 0, my = 0;
 document.addEventListener('mousemove', e => {
-  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  mx = (e.clientX / window.innerWidth - 0.5) * 2;
+  my = (e.clientY / window.innerHeight - 0.5) * 2;
 });
 
 // ============================================================
-//  SCROLL PROGRESS & STAGES
+//  SCROLL + STAGES
 // ============================================================
 gsap.registerPlugin(ScrollTrigger);
-
-let scrollProgress = 0;
+let scrollP = 0;
 const stages = document.querySelectorAll('.stage-label');
-const scrollHint = document.getElementById('scrollHint');
 
-// Track scroll through spacer
 ScrollTrigger.create({
   trigger: '.scroll-spacer',
   start: 'top top',
   end: 'bottom bottom',
-  scrub: true,
-  onUpdate: self => {
-    scrollProgress = self.progress;
-    updateScene(scrollProgress);
-    updateStageLabels(scrollProgress);
-  }
+  scrub: 0.8,
+  onUpdate: self => { scrollP = self.progress; }
 });
 
-// Nav bg
 ScrollTrigger.create({
   start: 80,
   onEnter: () => document.getElementById('navbar').classList.add('scrolled'),
   onLeaveBack: () => document.getElementById('navbar').classList.remove('scrolled')
 });
 
-// Progress bar
 window.addEventListener('scroll', () => {
   const p = window.pageYOffset / (document.body.scrollHeight - window.innerHeight);
   document.getElementById('progress').style.width = (p * 100) + '%';
 });
 
-function updateStageLabels(p) {
-  const current = p < 0.05 ? 0 : p < 0.25 ? 1 : p < 0.45 ? 2 : p < 0.7 ? 3 : 4;
-  stages.forEach((s, i) => s.classList.toggle('active', i === current));
-  scrollHint.classList.toggle('show', p < 0.03);
-}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smoothstep(t) { return t * t * (3 - 2 * t); }
+function clamp01(t) { return Math.max(0, Math.min(1, t)); }
 
 // ============================================================
-//  UPDATE SCENE BASED ON SCROLL
+//  UPDATE SCENE
 // ============================================================
 function updateScene(p) {
-  // --- STAGE 0: Intro (0-0.05) - Empty, just particles ---
-  // --- STAGE 1: Foundation (0.05-0.25) ---
-  // --- STAGE 2: Sketch (0.25-0.45) ---
-  // --- STAGE 3: 3D Model (0.45-0.7) ---
-  // --- STAGE 4: Materials (0.7-1.0) ---
-
-  // Camera path
-  const camPaths = [
-    { pos: [0, 8, 25], look: [0, 3, 0] },      // 0: overview
-    { pos: [12, 3, 12], look: [0, 1, 0] },      // 1: foundation low angle
-    { pos: [-10, 10, 14], look: [0, 5, 0] },    // 2: sketch perspective
-    { pos: [8, 7, 10], look: [0, 5, 0] },       // 3: orbit model
-    { pos: [5, 6, 14], look: [0, 5, 0] },       // 4: final beauty shot
+  // ---- CAMERA ----
+  const camKeyframes = [
+    { p: 0.00, pos: [2, 12, 30], look: [0, 4, 0] },
+    { p: 0.10, pos: [14, 4, 14], look: [0, 1.5, 0] },
+    { p: 0.30, pos: [-12, 12, 16], look: [0, 6, 0] },
+    { p: 0.50, pos: [10, 8, 14], look: [0, 6, 0] },
+    { p: 0.75, pos: [-8, 8, 16], look: [0, 6, 0] },
+    { p: 1.00, pos: [8, 7, 18], look: [0, 6, 0] },
   ];
 
-  let idx, localP;
-  if (p < 0.05) { idx = 0; localP = p / 0.05; }
-  else if (p < 0.25) { idx = 0; localP = (p - 0.05) / 0.2; }
-  else if (p < 0.45) { idx = 1; localP = (p - 0.25) / 0.2; }
-  else if (p < 0.7) { idx = 2; localP = (p - 0.45) / 0.25; }
-  else { idx = 3; localP = (p - 0.7) / 0.3; }
+  let ci = 0;
+  for (let i = 0; i < camKeyframes.length - 1; i++) {
+    if (p >= camKeyframes[i].p && p <= camKeyframes[i+1].p) { ci = i; break; }
+  }
+  const kf0 = camKeyframes[ci], kf1 = camKeyframes[ci + 1];
+  const localP = smoothstep(clamp01((p - kf0.p) / (kf1.p - kf0.p)));
 
-  localP = Math.min(1, Math.max(0, localP));
-  const smooth = localP * localP * (3 - 2 * localP); // smoothstep
-
-  const from = camPaths[idx];
-  const to = camPaths[idx + 1];
   camera.position.set(
-    from.pos[0] + (to.pos[0] - from.pos[0]) * smooth + mouseX * 0.5,
-    from.pos[1] + (to.pos[1] - from.pos[1]) * smooth + mouseY * 0.2,
-    from.pos[2] + (to.pos[2] - from.pos[2]) * smooth
+    lerp(kf0.pos[0], kf1.pos[0], localP) + mx * 0.6,
+    lerp(kf0.pos[1], kf1.pos[1], localP) + my * 0.3,
+    lerp(kf0.pos[2], kf1.pos[2], localP)
   );
-  const lx = from.look[0] + (to.look[0] - from.look[0]) * smooth;
-  const ly = from.look[1] + (to.look[1] - from.look[1]) * smooth;
-  const lz = from.look[2] + (to.look[2] - from.look[2]) * smooth;
-  camera.lookAt(lx, ly, lz);
+  camera.lookAt(
+    lerp(kf0.look[0], kf1.look[0], localP),
+    lerp(kf0.look[1], kf1.look[1], localP),
+    lerp(kf0.look[2], kf1.look[2], localP)
+  );
 
-  // --- GRID ---
-  const gridOp = p < 0.05 ? p / 0.05 * 0.08 : p < 0.6 ? 0.08 : 0.08 * (1 - (p - 0.6) / 0.15);
-  gridLineMat.opacity = Math.max(0, Math.min(0.08, gridOp));
-
-  // --- FOUNDATION ---
-  const foundP = p < 0.05 ? 0 : p < 0.25 ? (p - 0.05) / 0.2 : 1;
-  wireMat.opacity = foundP < 1 ? foundP * 0.5 : Math.max(0, 0.5 - (p - 0.25) / 0.3 * 0.5);
-  wireMatDim.opacity = wireMat.opacity * 0.6;
-  foundationGroup.position.y = foundP < 1 ? -2 + foundP * 2 : 0;
-
-  // --- SKETCH LINES ---
-  const sketchP = p < 0.25 ? 0 : p < 0.45 ? (p - 0.25) / 0.2 : p < 0.6 ? 1 : Math.max(0, 1 - (p - 0.6) / 0.15);
-  sketchGroup.children.forEach((line, i) => {
-    const delay = i * 0.06;
-    const lineP = Math.max(0, Math.min(1, (sketchP - delay) / (1 - delay)));
-    line.material.opacity = lineP * 0.4 * (p < 0.6 ? 1 : sketchP);
+  // ---- STAGE VISIBILITY ----
+  const stageRanges = [
+    [0, 0.08],    // 0: intro
+    [0.08, 0.25], // 1: foundation
+    [0.25, 0.47], // 2: sketch
+    [0.47, 0.72], // 3: model
+    [0.72, 1.0],  // 4: solid
+  ];
+  stages.forEach((s, i) => {
+    const [start, end] = stageRanges[i];
+    const fadeIn = clamp01((p - start) / 0.03);
+    const fadeOut = clamp01((end - p) / 0.03);
+    const vis = Math.min(fadeIn, fadeOut);
+    s.style.opacity = vis;
+    s.classList.toggle('visible', vis > 0.01);
   });
 
-  // --- 3D MODEL WIREFRAME ---
-  const modelP = p < 0.45 ? 0 : p < 0.7 ? (p - 0.45) / 0.25 : 1;
-  const modelFade = p < 0.75 ? 1 : Math.max(0, 1 - (p - 0.75) / 0.15);
-  modelGroup.children.forEach((child, i) => {
-    const delay = i * 0.08;
-    const childP = Math.max(0, Math.min(1, (modelP - delay) / (1 - delay)));
-    child.material.opacity = childP * 0.6 * modelFade;
-    child.position.y = child.position.y; // keep position
+  // Scroll hint
+  document.getElementById('scrollHint').classList.toggle('show', p < 0.04);
+
+  // ---- GRID ----
+  const gridOp = p < 0.06 ? p / 0.06 : p < 0.5 ? 1 : clamp01(1 - (p - 0.5) / 0.15);
+  gridMat.opacity = gridOp * 0.12;
+  gridGlowMat.opacity = gridOp * 0.06;
+
+  // ---- FOUNDATION (0.08 → 0.25) ----
+  const foundIn = clamp01((p - 0.06) / 0.08);
+  const foundOut = clamp01(1 - (p - 0.28) / 0.1);
+  const foundVis = Math.min(foundIn, foundOut);
+  foundGroup.position.y = -3 + foundIn * 3;
+  foundGroup.children.forEach(c => {
+    if (c.material) c.material.opacity = foundVis * (c.material.userData?.targetOp || 0.8);
+    if (c.material && c.material.color.getHex() === 0xff8844) c.material.opacity = foundVis * 0.5;
   });
 
-  // Scale up model
-  const modelScale = p < 0.45 ? 0.8 : 0.8 + modelP * 0.2;
-  modelGroup.scale.setScalar(Math.min(1, modelScale));
-
-  // --- SOLID BUILDING ---
-  const solidP = p < 0.7 ? 0 : (p - 0.7) / 0.3;
-  const solidSmooth = solidP * solidP * (3 - 2 * solidP);
-
-  solidGroup.children.forEach(child => {
-    if (child.material) {
-      if (child.material === ground.material) {
-        child.material.opacity = solidSmooth * 0.8;
-      } else {
-        child.material.opacity = solidSmooth;
-      }
-    }
+  // ---- SKETCH (0.25 → 0.47) ----
+  const skIn = clamp01((p - 0.23) / 0.12);
+  const skOut = clamp01(1 - (p - 0.5) / 0.08);
+  const skVis = Math.min(skIn, skOut);
+  sketchMats.forEach((m, i) => {
+    const delay = (i * 0.015);
+    const lineP = clamp01((skIn - delay) / (1 - delay));
+    const isGlow = i % 2 === 1;
+    m.opacity = lineP * skVis * (isGlow ? 0.25 : 0.7);
   });
 
-  // --- LIGHTS ---
-  dirLight.intensity = solidSmooth * 1.5;
-  accentLight.intensity = solidSmooth * 2;
-  rimLight.intensity = solidSmooth * 1;
-  ambLight.intensity = 0.3 + solidSmooth * 0.7;
+  // ---- MODEL (0.47 → 0.72) ----
+  const mdlIn = clamp01((p - 0.45) / 0.12);
+  const mdlOut = clamp01(1 - (p - 0.75) / 0.1);
+  const mdlVis = Math.min(mdlIn, mdlOut);
+  modelMats.forEach((m, i) => {
+    const delay = i * 0.008;
+    const lineP = clamp01((mdlIn - delay) / (1 - delay));
+    const isGlow = i % 2 === 1;
+    m.opacity = lineP * mdlVis * (isGlow ? 0.2 : 0.75);
+  });
+  const mdlScale = 0.85 + mdlIn * 0.15;
+  modelGroup.scale.setScalar(Math.min(1, mdlScale));
 
-  // --- FOG ---
-  scene.fog.density = 0.035 - solidSmooth * 0.015;
+  // ---- SOLID (0.72 → 1.0) ----
+  const solidIn = smoothstep(clamp01((p - 0.7) / 0.2));
+  solidMats.forEach(m => { m.opacity = solidIn; });
+  matGround.opacity = solidIn * 0.85;
+  matGlass.opacity = solidIn * 0.7;
+
+  // ---- LIGHTS ----
+  dirLight.intensity = solidIn * 2;
+  warmLight.intensity = solidIn * 3;
+  coolLight.intensity = solidIn * 1.5;
+  rimLight.intensity = solidIn * 2;
+  ambLight.intensity = 0.3 + solidIn * 0.8;
+
+  // Fog lifts for solid
+  scene.fog.density = 0.018 - solidIn * 0.008;
 }
 
 // ============================================================
-//  ANIMATE
+//  RENDER LOOP
 // ============================================================
+const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  particles.rotation.y += 0.0002;
-  // Gentle building sway
-  const t = Date.now() * 0.001;
-  solidGroup.rotation.y = Math.sin(t * 0.15) * 0.01;
-  modelGroup.rotation.y = solidGroup.rotation.y;
-  sketchGroup.rotation.y = solidGroup.rotation.y;
+  const t = clock.getElapsedTime();
+
+  updateScene(scrollP);
+
+  particles.rotation.y = t * 0.02;
+  // Subtle building sway
+  const sway = Math.sin(t * 0.2) * 0.005;
+  solidGroup.rotation.y = sway;
+  modelGroup.rotation.y = sway;
+  sketchGroup.rotation.y = sway;
+  foundGroup.rotation.y = sway;
+
   renderer.render(scene, camera);
 }
 animate();
@@ -810,58 +755,44 @@ window.addEventListener('load', () => {
       opacity: 0, duration: 0.8,
       onComplete: () => {
         document.getElementById('loader').style.display = 'none';
-        scrollHint.classList.add('show');
-        stages[0].classList.add('active');
+        document.getElementById('scrollHint').classList.add('show');
       }
     });
-  }, 1800);
+  }, 1500);
 });
 
 // ============================================================
-//  GSAP SECTION ANIMATIONS
+//  SECTION ANIMS
 // ============================================================
 document.querySelectorAll('.content-sections section').forEach(sec => {
   gsap.fromTo(sec.querySelectorAll('.s-num,.s-div,.s-title'),
-    { opacity: 0, y: 50 },
-    { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: 'power2.out',
-      scrollTrigger: { trigger: sec, start: 'top 80%' } }
-  );
+    { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: .9, stagger: .12, ease: 'power2.out',
+      scrollTrigger: { trigger: sec, start: 'top 80%' } });
 });
-
 document.querySelectorAll('.project-row').forEach((r, i) => {
-  gsap.fromTo(r, { opacity: 0, x: -30 },
-    { opacity: 1, x: 0, duration: 0.6, delay: i * 0.1,
-      scrollTrigger: { trigger: r, start: 'top 88%' } });
+  gsap.fromTo(r, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .6, delay: i*.1,
+    scrollTrigger: { trigger: r, start: 'top 88%' } });
 });
-
 document.querySelectorAll('.skill-box').forEach((b, i) => {
-  gsap.fromTo(b, { opacity: 0, y: 40 },
-    { opacity: 1, y: 0, duration: 0.6, delay: i * 0.12,
-      scrollTrigger: { trigger: b, start: 'top 85%' } });
+  gsap.fromTo(b, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .6, delay: i*.12,
+    scrollTrigger: { trigger: b, start: 'top 85%' } });
 });
-
 document.querySelectorAll('.stat').forEach((s, i) => {
-  gsap.fromTo(s, { opacity: 0, y: 30 },
-    { opacity: 1, y: 0, duration: 0.5, delay: i * 0.1,
-      scrollTrigger: { trigger: s, start: 'top 88%' } });
+  gsap.fromTo(s, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, delay: i*.1,
+    scrollTrigger: { trigger: s, start: 'top 88%' } });
 });
 
-// ============================================================
-//  PROJECT TOGGLE
-// ============================================================
+// PROJECT TOGGLE
 function toggleProj(i) {
   const el = document.getElementById('proj-' + i);
-  const wasOpen = el.classList.contains('open');
+  const was = el.classList.contains('open');
   document.querySelectorAll('.project-expand').forEach(e => e.classList.remove('open'));
-  if (!wasOpen) el.classList.add('open');
+  if (!was) el.classList.add('open');
 }
 
-// ============================================================
-//  SMOOTH NAV
-// ============================================================
+// NAV SMOOTH
 document.querySelectorAll('nav a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
+  a.addEventListener('click', e => { e.preventDefault();
     const t = document.querySelector(a.getAttribute('href'));
     if (t) t.scrollIntoView({ behavior: 'smooth' });
   });
